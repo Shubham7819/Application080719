@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/action_play"
+        android:title="@string/play"
+        android:icon="@android:drawable/ic_media_play"/>
+
+    <item
+        android:id="@+id/action_clear"
+        android:title="@string/clear"
+        android:icon="@android:drawable/ic_menu_close_clear_cancel"/>
+
+    <item
+        android:id="@+id/action_timer"
+        android:title="@string/timer"
+        android:icon="@android:drawable/ic_lock_idle_alarm"/>
+
+    <item
+        android:id="@+id/action_selecction"
+        android:title="@string/selection"
+        android:icon="@android:drawable/ic_input_get"/>
+
+</menu>

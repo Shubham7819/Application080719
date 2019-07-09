@@ -2,4 +2,14 @@
     <string name="app_name">Application080719</string>
     <string name="tab_text_1">Tab 1</string>
     <string name="tab_text_2">Tab 2</string>
+
+    <string name="play">Play</string>
+    <string name="clear">Clear</string>
+    <string name="timer">Timer</string>
+    <string name="selection">Selection</string>
+
+    <string name="meditations">Meditations</string>
+    <string name="breath">Breath</string>
+    <string name="brief_practices">Brief Practices</string>
+    <string name="body_scan">Body Scan</string>
 </resources>
