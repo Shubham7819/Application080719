@@ -1,6 +1,7 @@
 package com.example.application080719.ui.main;
 
 import android.content.Context;
+import android.os.Bundle;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
@@ -29,7 +30,20 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
     public Fragment getItem(int position) {
         // getItem is called to instantiate the fragment for the given page.
         // Return a PlaceholderFragment (defined as a static inner class below).
-        return PlaceholderFragment.newInstance(position + 1);
+        Bundle bundle = new Bundle();
+        if (position == 0) {
+            bundle.putInt(null, position);
+        } else if (position == 1) {
+            bundle.putInt(null, position);
+        } else if (position == 2) {
+            bundle.putInt(null, position);
+        } else {
+            bundle.putInt(null, position);
+        }
+        CommonFragment fragment = new CommonFragment();
+        fragment.setArguments(bundle);
+        return fragment;
+//            return PlaceholderFragment.newInstance(position + 1);
     }
 
     @Nullable

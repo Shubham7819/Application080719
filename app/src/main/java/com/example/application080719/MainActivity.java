@@ -3,17 +3,14 @@ package com.example.application080719;
 import android.os.Bundle;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.tabs.TabLayout;
 
+import androidx.annotation.NonNull;
 import androidx.viewpager.widget.ViewPager;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.view.Gravity;
-import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
+import android.widget.Toast;
 
 import com.example.application080719.ui.main.SectionsPagerAdapter;
 
@@ -51,5 +48,22 @@ public class MainActivity extends AppCompatActivity {
 //            View title = tab.findViewById(com.roughike.bottombar.R.id.bb_bottom_bar_title);
 //            title.setVisibility(View.GONE);
 //        }
+        bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+                if (menuItem.getItemId() == R.id.action_play) {
+                    String menuTitle =  menuItem.getTitle().toString();
+                    if (getString(R.string.play).equals(menuTitle)) {
+                        menuItem.setTitle("Pause");
+                        menuItem.setIcon(R.drawable.ic_pause);
+                    } else {
+                        menuItem.setTitle(R.string.play);
+                        menuItem.setIcon(R.drawable.ic_play);
+                    }
+                    Toast.makeText(MainActivity.this, "Title: " + menuItem.getTitle().toString(), Toast.LENGTH_SHORT).show();
+                }
+                return true;
+            }
+        });
     }
 }
