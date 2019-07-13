@@ -18,7 +18,7 @@ import com.example.application080719.R;
 public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
     @StringRes
-    private static final int[] TAB_TITLES = new int[]{R.string.breath, R.string.brief_practices, R.string.body_scan, R.string.meditations};
+    private static final int[] TAB_TITLES = new int[]{R.string.sounds, R.string.breath, R.string.brief_practices, R.string.body_scan, R.string.meditations};
     private final Context mContext;
 
     public SectionsPagerAdapter(Context context, FragmentManager fm) {
@@ -32,10 +32,12 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
         // Return a PlaceholderFragment (defined as a static inner class below).
         Bundle bundle = new Bundle();
         if (position == 0) {
-            bundle.putInt(null, position);
+
         } else if (position == 1) {
             bundle.putInt(null, position);
         } else if (position == 2) {
+            bundle.putInt(null, position);
+        } else if (position == 3) {
             bundle.putInt(null, position);
         } else {
             bundle.putInt(null, position);
@@ -54,7 +56,7 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
     @Override
     public int getCount() {
-        // Show 2 total pages.
-        return 4;
+        // Show 5 total pages.
+        return 5;
     }
 }

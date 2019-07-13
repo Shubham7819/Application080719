@@ -2,19 +2,21 @@ package com.example.application080719.ui.main;
 
 
 import android.os.Bundle;
-
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.recyclerview.widget.StaggeredGridLayoutManager;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.StaggeredGridLayoutManager;
+
 import com.example.application080719.MeditationExercise;
 import com.example.application080719.R;
+import com.example.application080719.SoundItem;
 import com.example.application080719.ui.ExerciseListAdapter;
+import com.example.application080719.ui.SoundListAdapter;
 
 import java.util.ArrayList;
 
@@ -24,6 +26,8 @@ import java.util.ArrayList;
 public class CommonFragment extends Fragment {
 
     private ArrayList<MeditationExercise> briefExercisesList = new ArrayList<>();
+    private int tabPosition = 0;
+    private ArrayList<SoundItem> soundItemsList = new ArrayList<>();
 
     public CommonFragment() {
         // Required empty public constructor
@@ -33,7 +37,6 @@ public class CommonFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
 
-        int tabPosition = 0;
         if (getArguments() != null) {
             tabPosition = getArguments().getInt(null, 0);
         }
@@ -47,16 +50,39 @@ public class CommonFragment extends Fragment {
         // Inflate the layout for this fragment
         View root = inflater.inflate(R.layout.horizontal_list_layout, container, false);
         RecyclerView recyclerView = root.findViewById(R.id.horizontal_recycler_view);
-        recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.HORIZONTAL));
+        if (tabPosition == 0) {
+            recyclerView.setLayoutManager(new GridLayoutManager(null, 4, RecyclerView.HORIZONTAL, false));
+            SoundListAdapter adapter = new SoundListAdapter(getActivity(), soundItemsList);
 
-        ExerciseListAdapter adapter = new ExerciseListAdapter(getActivity(), briefExercisesList);
-        recyclerView.setAdapter(adapter);
+            recyclerView.setAdapter(adapter);
+        } else {
+            recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.HORIZONTAL));
+
+            ExerciseListAdapter adapter = new ExerciseListAdapter(getActivity(), briefExercisesList);
+            recyclerView.setAdapter(adapter);
+        }
 
         return root;
     }
 
     private void getListData(int tabPosition) {
         if (tabPosition == 0) {
+            soundItemsList.add(new SoundItem("bells", R.raw.bells_tibetan));
+            soundItemsList.add(new SoundItem("bird", R.raw.bird_song));
+            soundItemsList.add(new SoundItem("clock chimes", R.raw.clock_chimes));
+            soundItemsList.add(new SoundItem("farm", R.raw.farm));
+            soundItemsList.add(new SoundItem("fire", R.raw.fire_burning));
+            soundItemsList.add(new SoundItem("flute", R.raw.flute_tone));
+            soundItemsList.add(new SoundItem("music box", R.raw.music_box));
+            soundItemsList.add(new SoundItem("night", R.raw.nightime));
+            soundItemsList.add(new SoundItem("rain", R.raw.rain));
+            soundItemsList.add(new SoundItem("rainforest", R.raw.rainforest_ambience));
+            soundItemsList.add(new SoundItem("river", R.raw.river));
+            soundItemsList.add(new SoundItem("sea", R.raw.sea_waves));
+            soundItemsList.add(new SoundItem("thunder", R.raw.thunder_hd));
+            soundItemsList.add(new SoundItem("waterfall", R.raw.waterfall_large));
+            soundItemsList.add(new SoundItem("wind", R.raw.wind));
+        } else if (tabPosition == 1) {
             briefExercisesList.add(new MeditationExercise("Three minute breathing"
                     , "Peter Morgan, Free Mindfulness", R.raw.free_mind_fulness_3minute_breathing));
             briefExercisesList.add(new MeditationExercise("Five minute breathing"
@@ -69,7 +95,7 @@ public class CommonFragment extends Fragment {
                     , "Peter Morgan, Free Mindfulness", R.raw.free_mind_fulness_3minute_breathing));
             briefExercisesList.add(new MeditationExercise("Ten minute mindfulness of breathing"
                     , "Padraig O'Morain", R.raw.free_mind_fulness_3minute_breathing));
-        } else if (tabPosition == 1) {
+        } else if (tabPosition == 2) {
             briefExercisesList.add(new MeditationExercise("Brief mindfulness practice"
                     , "Padraig O'Morain", R.raw.free_mind_fulness_3minute_breathing));
             briefExercisesList.add(new MeditationExercise("The breathing space"
@@ -80,7 +106,7 @@ public class CommonFragment extends Fragment {
                     , "Peter Morgan, Free Mindfulness", R.raw.free_mind_fulness_3minute_breathing));
             briefExercisesList.add(new MeditationExercise("Three minute mindfulness of sounds"
                     , "Peter Morgan, Free Mindfulness", R.raw.free_mind_fulness_3minute_breathing));
-        } else if (tabPosition == 2) {
+        } else if (tabPosition == 3) {
             briefExercisesList.add(new MeditationExercise("Forty five minute body scan"
                     , "UCSD Center for mindfulness", R.raw.free_mind_fulness_3minute_breathing));
             briefExercisesList.add(new MeditationExercise("Twenty minute body scan"
@@ -91,7 +117,7 @@ public class CommonFragment extends Fragment {
                     , "Melbourne Mindfulness Centre & Still Mind", R.raw.free_mind_fulness_3minute_breathing));
             briefExercisesList.add(new MeditationExercise("Body scan"
                     , "Vidyamala Burch, Breathworks", R.raw.free_mind_fulness_3minute_breathing));
-        } else {
+        } else if (tabPosition == 4) {
             briefExercisesList.add(new MeditationExercise("Seated meditation"
                     , "UCSD Center for mindfulness", R.raw.free_mind_fulness_3minute_breathing));
             briefExercisesList.add(new MeditationExercise("Sitting meditation"
@@ -104,7 +130,8 @@ public class CommonFragment extends Fragment {
                     , "UCSD Center for mindfulness", R.raw.free_mind_fulness_3minute_breathing));
             briefExercisesList.add(new MeditationExercise("Compassionate Breath"
                     , "Vidyamala Burch, Breathworks", R.raw.free_mind_fulness_3minute_breathing));
-        }
+        } else
+            briefExercisesList = null;
     }
 
 }
