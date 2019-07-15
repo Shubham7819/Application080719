@@ -14,7 +14,6 @@ import com.example.application080719.MeditationExercise;
 import com.example.application080719.R;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class ExerciseListAdapter extends RecyclerView.Adapter<ExerciseListAdapter.ExerciseViewHolder> {
 
@@ -52,7 +51,7 @@ public class ExerciseListAdapter extends RecyclerView.Adapter<ExerciseListAdapte
         return mExercisesList.size();
     }
 
-    public class ExerciseViewHolder extends RecyclerView.ViewHolder{
+    public class ExerciseViewHolder extends RecyclerView.ViewHolder {
 
         TextView titleTV;
         TextView guidesTV;

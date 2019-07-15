@@ -28,6 +28,7 @@ public class CommonFragment extends Fragment {
     private ArrayList<MeditationExercise> briefExercisesList = new ArrayList<>();
     private int tabPosition = 0;
     private ArrayList<SoundItem> soundItemsList = new ArrayList<>();
+    public static SoundListAdapter soundListAdapter;
 
     public CommonFragment() {
         // Required empty public constructor
@@ -52,12 +53,10 @@ public class CommonFragment extends Fragment {
         RecyclerView recyclerView = root.findViewById(R.id.horizontal_recycler_view);
         if (tabPosition == 0) {
             recyclerView.setLayoutManager(new GridLayoutManager(null, 4, RecyclerView.HORIZONTAL, false));
-            SoundListAdapter adapter = new SoundListAdapter(getActivity(), soundItemsList);
-
-            recyclerView.setAdapter(adapter);
+            soundListAdapter = new SoundListAdapter(getActivity(), soundItemsList);
+            recyclerView.setAdapter(soundListAdapter);
         } else {
             recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.HORIZONTAL));
-
             ExerciseListAdapter adapter = new ExerciseListAdapter(getActivity(), briefExercisesList);
             recyclerView.setAdapter(adapter);
         }

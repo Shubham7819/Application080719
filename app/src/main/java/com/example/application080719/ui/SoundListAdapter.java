@@ -12,6 +12,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.application080719.MainActivity;
 import com.example.application080719.R;
 import com.example.application080719.SoundItem;
 import com.example.application080719.Sounds;
@@ -20,6 +21,7 @@ import java.util.ArrayList;
 
 import static com.example.application080719.Sounds.soundIdList;
 import static com.example.application080719.Sounds.soundPool;
+import static com.example.application080719.Sounds.soundsPlayingCounter;
 import static com.example.application080719.Sounds.streamIdList;
 
 public class SoundListAdapter extends RecyclerView.Adapter<SoundListAdapter.SoundViewHolder> {
@@ -44,7 +46,21 @@ public class SoundListAdapter extends RecyclerView.Adapter<SoundListAdapter.Soun
     @Override
     public void onBindViewHolder(@NonNull final SoundViewHolder holder, int position) {
         final SoundItem currentItem = mSoundList.get(position);
-        holder.imgBtn.setImageResource(R.drawable.ic_play);
+        if (!Sounds.allPaused) {
+            if (isAudioSelected(currentItem.getItemTitle())) {
+                holder.imgBtn.setImageResource(R.drawable.ic_pause);
+                setAudioPlaying(currentItem.getItemTitle(), true);
+            } else {
+                holder.imgBtn.setImageResource(R.drawable.ic_play);
+            }
+        } else {
+            holder.imgBtn.setImageResource(R.drawable.ic_play);
+        }
+        if (isAudioSelected(currentItem.getItemTitle())) {
+            holder.imgBtn.setBackgroundResource(R.drawable.button_selected_background);
+        } else {
+            holder.imgBtn.setBackgroundResource(R.drawable.button_background);
+        }
         holder.btnTitle.setText(currentItem.getItemTitle());
 
         holder.imgBtn.setOnClickListener(new View.OnClickListener() {
@@ -57,21 +73,63 @@ public class SoundListAdapter extends RecyclerView.Adapter<SoundListAdapter.Soun
                 if (isItemLoaded(currentItem.getItemTitle())) {
                     if (isAudioPlaying(currentItem.getItemTitle())) {
 
-                        soundPool.pause(streamIdList[id]);
+                        soundPool.stop(streamIdList[id]);
                         setAudioPlaying(currentItem.getItemTitle(), false);
-                        Toast.makeText(mContext, "paused", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(mContext, "stopped", Toast.LENGTH_SHORT).show();
+                        Sounds.soundsPlayingCounter--;
+                        if (soundsPlayingCounter > 0) {
+                            soundPool.autoResume();
+                        } else {
+                            MainActivity.menuItemPlay.setTitle(R.string.play);
+                            MainActivity.menuItemPlay.setIcon(R.drawable.ic_play);
+                        }
+                        setAudioSelected(currentItem.getItemTitle(), false);
                         holder.imgBtn.setImageResource(R.drawable.ic_play);
+                        holder.imgBtn.setBackgroundResource(R.drawable.button_background);
                     } else {
+                        if (Sounds.allPaused) {
+                            if (isAudioSelected(currentItem.getItemTitle())) {
+                                setAudioSelected(currentItem.getItemTitle(), false);
+                                soundPool.stop(streamIdList[id]);
+                                MainActivity.menuItemPlay.setTitle("Pause");
+                                MainActivity.menuItemPlay.setIcon(R.drawable.ic_pause);
+                                Sounds.soundsPlayingCounter--;
+                            } else {
+                                Sounds.streamIdList[id] = soundPool.play(soundIdList[id], 1, 1, 0, -1, 1);
+                                setAudioPlaying(currentItem.getItemTitle(), true);
+                                Toast.makeText(mContext, "playing", Toast.LENGTH_SHORT).show();
+                                MainActivity.menuItemPlay.setTitle("Pause");
+                                MainActivity.menuItemPlay.setIcon(R.drawable.ic_pause);
+                                setAudioSelected(currentItem.getItemTitle(), true);
+                                Sounds.soundsPlayingCounter++;
+                                holder.imgBtn.setImageResource(R.drawable.ic_pause);
+                                holder.imgBtn.setBackgroundResource(R.drawable.button_selected_background);
+                            }
+                        } else {
 
-                        soundPool.resume(Sounds.streamIdList[id]);
-                        setAudioPlaying(currentItem.getItemTitle(), true);
-                        Toast.makeText(mContext, "playing", Toast.LENGTH_SHORT).show();
-                        holder.imgBtn.setImageResource(R.drawable.ic_pause);
+                            Sounds.streamIdList[id] = soundPool.play(soundIdList[id], 1, 1, 0, -1, 1);
+                            setAudioPlaying(currentItem.getItemTitle(), true);
+                            Toast.makeText(mContext, "playing", Toast.LENGTH_SHORT).show();
+                            MainActivity.menuItemPlay.setTitle("Pause");
+                            MainActivity.menuItemPlay.setIcon(R.drawable.ic_pause);
+                            setAudioSelected(currentItem.getItemTitle(), true);
+                            Sounds.soundsPlayingCounter++;
+                            holder.imgBtn.setImageResource(R.drawable.ic_pause);
+                            holder.imgBtn.setBackgroundResource(R.drawable.button_selected_background);
+                        }
+                        if (soundsPlayingCounter > 0) {
+                            soundPool.autoResume();
+                        }
+                        Sounds.allPaused = false;
+                        notifyDataSetChanged();
                     }
                 } else {
                     soundIdList[id] = soundPool.load(mContext, currentItem.getItemResourceId(), 1);
                     holder.imgBtn.setImageResource(R.drawable.ic_pause);
-//                holder.imgBtn.setBackgroundResource(R.drawable.button_selected_background);
+                    holder.imgBtn.setBackgroundResource(R.drawable.button_selected_background);
+                    if (soundsPlayingCounter > 0) {
+                        soundPool.autoResume();
+                    }
 //                    Toast.makeText(mContext, "play now", Toast.LENGTH_SHORT).show();
                 }
             }
@@ -348,6 +406,141 @@ public class SoundListAdapter extends RecyclerView.Adapter<SoundListAdapter.Soun
             default:
                 Log.v(TAG, "default case");
                 return false;
+        }
+    }
+
+    private boolean isAudioSelected(String soundTitle) {
+        switch (soundTitle) {
+            case "bells":
+//                Log.v(TAG, "bells case" + Sounds.isBellsSoundLoaded);
+                return Sounds.isBellsSoundSelected;
+
+            case "bird":
+//                Log.v(TAG, "bird case");
+                return Sounds.isBirdSoundSelected;
+
+            case "clock chimes":
+//                Log.v(TAG, "clock case");
+                return Sounds.isClockSoundSelected;
+
+            case "farm":
+//                Log.v(TAG, "farm case");
+                return Sounds.isFarmSoundSelected;
+
+            case "fire":
+                Log.v(TAG, "fire case");
+                return Sounds.isFireSoundSelected;
+
+            case "flute":
+                Log.v(TAG, "flute case");
+                return Sounds.isFluteSoundSelected;
+
+            case "music box":
+                Log.v(TAG, "music case");
+                return Sounds.isMusicBoxSoundSelected;
+
+            case "night":
+                Log.v(TAG, "night case");
+                return Sounds.isNightSoundSelected;
+
+            case "rain":
+                Log.v(TAG, "rain case");
+                return Sounds.isRainSoundSelected;
+
+            case "rainforest":
+                Log.v(TAG, "rainforest case");
+                return Sounds.isRainForestSoundSelected;
+
+            case "river":
+                Log.v(TAG, "river case");
+                return Sounds.isRiverSoundSelected;
+
+            case "sea":
+                Log.v(TAG, "sea case");
+                return Sounds.isSeaSoundSelected;
+
+            case "thunder":
+                Log.v(TAG, "thunder case");
+                return Sounds.isThunderSoundSelected;
+
+            case "waterfall":
+                Log.v(TAG, "waterfall case");
+                return Sounds.isWaterfallSoundSelected;
+
+            case "wind":
+                Log.v(TAG, "wind case");
+                return Sounds.isWindSoundSelected;
+
+            default:
+                Log.v(TAG, "default case");
+                return false;
+        }
+    }
+
+    private void setAudioSelected(String soundTitle, boolean b) {
+        switch (soundTitle) {
+            case "bells":
+                Sounds.isBellsSoundSelected = b;
+                break;
+
+            case "bird":
+                Sounds.isBirdSoundSelected = b;
+                break;
+
+            case "clock chimes":
+                Sounds.isClockSoundSelected = b;
+                break;
+
+            case "farm":
+                Sounds.isFarmSoundSelected = b;
+                break;
+
+            case "fire":
+                Sounds.isFireSoundSelected = b;
+                break;
+
+            case "flute":
+                Sounds.isFluteSoundSelected = b;
+                break;
+
+            case "music box":
+                Sounds.isMusicBoxSoundSelected = b;
+                break;
+
+            case "night":
+                Sounds.isNightSoundSelected = b;
+                break;
+
+            case "rain":
+                Sounds.isRainSoundSelected = b;
+                break;
+
+            case "rainforest":
+                Sounds.isRainForestSoundSelected = b;
+                break;
+
+            case "river":
+                Sounds.isRiverSoundSelected = b;
+                break;
+
+            case "sea":
+                Sounds.isSeaSoundSelected = b;
+                break;
+
+            case "thunder":
+                Sounds.isThunderSoundSelected = b;
+                break;
+
+            case "waterfall":
+                Sounds.isWaterfallSoundSelected = b;
+                break;
+
+            case "wind":
+                Sounds.isWindSoundSelected = b;
+                break;
+
+            default:
+                break;
         }
     }
 }

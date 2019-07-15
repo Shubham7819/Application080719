@@ -32,10 +32,17 @@ public class Sounds {
             isNightSoundPlaying, isRainSoundPlaying, isRainForestSoundPlaying, isRiverSoundPlaying,
             isSeaSoundPlaying, isThunderSoundPlaying, isWaterfallSoundPlaying, isWindSoundPlaying = false;
 
+    public static boolean isBellsSoundSelected, isBirdSoundSelected, isClockSoundSelected,
+            isFarmSoundSelected, isFireSoundSelected, isFluteSoundSelected, isMusicBoxSoundSelected,
+            isNightSoundSelected, isRainSoundSelected, isRainForestSoundSelected, isRiverSoundSelected,
+            isSeaSoundSelected, isThunderSoundSelected, isWaterfallSoundSelected, isWindSoundSelected = false;
+
     public static int[] soundIdList = new int[15];
 
     public static int[] streamIdList = new int[15];
 
-    static int streamCounter = 0;
+    public static boolean allPaused = false;
+
+    public static int soundsPlayingCounter = 0;
 
 }

@@ -2,11 +2,11 @@ package com.example.application080719;
 
 public class MeditationExercise {
 
-    String mExercisetitle;
+    private String mExercisetitle;
 
-    String mExerciseGuides;
+    private String mExerciseGuides;
 
-    int mExerciseAudioResourceId;
+    private int mExerciseAudioResourceId;
 
     public String getmExercisetitle() {
         return mExercisetitle;
