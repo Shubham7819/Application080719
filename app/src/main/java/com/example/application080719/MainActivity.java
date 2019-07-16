@@ -23,8 +23,13 @@ import static com.example.application080719.Sounds.soundPool;
 public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadCompleteListener {
 
     final String TAG = MainActivity.class.getSimpleName();
-    MediaPlayer mediaPlayer;
     public static MenuItem menuItemPlay;
+
+    //TODO:
+    // - 1] make tab layout scrollable and text in one line
+    // - 2] implement bottom sheet for bottomnavigationbar items selection and timer
+    // - 3] in timer item user dialog to pick time
+    // - 4] use badge for selection item to show number of playing sounds
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,7 +89,8 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
 
     @Override
     protected void onStop() {
-        mediaPlayer = null;
+        soundPool.release();
+        soundPool = null;
         super.onStop();
     }
 
