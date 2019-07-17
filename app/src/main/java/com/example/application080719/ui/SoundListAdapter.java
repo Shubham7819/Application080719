@@ -7,7 +7,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -46,6 +45,7 @@ public class SoundListAdapter extends RecyclerView.Adapter<SoundListAdapter.Soun
     @Override
     public void onBindViewHolder(@NonNull final SoundViewHolder holder, int position) {
         final SoundItem currentItem = mSoundList.get(position);
+
         if (!Sounds.allPaused) {
             if (isAudioSelected(currentItem.getItemTitle())) {
                 holder.imgBtn.setImageResource(R.drawable.ic_pause);
@@ -56,27 +56,25 @@ public class SoundListAdapter extends RecyclerView.Adapter<SoundListAdapter.Soun
         } else {
             holder.imgBtn.setImageResource(R.drawable.ic_play);
         }
+
         if (isAudioSelected(currentItem.getItemTitle())) {
             holder.imgBtn.setBackgroundResource(R.drawable.button_selected_background);
         } else {
             holder.imgBtn.setBackgroundResource(R.drawable.button_background);
         }
+
         holder.btnTitle.setText(currentItem.getItemTitle());
 
         holder.imgBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 id = getVarName(currentItem.getItemTitle());
-                Log.v(TAG, "On Click called, id: " + id);
-//                holder.imgBtn.setBackgroundResource(R.drawable.button_selected_background);
-                Log.v(TAG, currentItem.getItemTitle() + " is item loaded " + isItemLoaded(currentItem.getItemTitle()));
                 if (isItemLoaded(currentItem.getItemTitle())) {
                     if (isAudioPlaying(currentItem.getItemTitle())) {
-
                         soundPool.stop(streamIdList[id]);
                         setAudioPlaying(currentItem.getItemTitle(), false);
-                        Toast.makeText(mContext, "stopped", Toast.LENGTH_SHORT).show();
                         Sounds.soundsPlayingCounter--;
+                        MainActivity.updateBadgeNumber(soundsPlayingCounter);
                         if (soundsPlayingCounter > 0) {
                             soundPool.autoResume();
                         } else {
@@ -94,26 +92,26 @@ public class SoundListAdapter extends RecyclerView.Adapter<SoundListAdapter.Soun
                                 MainActivity.menuItemPlay.setTitle("Pause");
                                 MainActivity.menuItemPlay.setIcon(R.drawable.ic_pause);
                                 Sounds.soundsPlayingCounter--;
+                                MainActivity.updateBadgeNumber(soundsPlayingCounter);
                             } else {
                                 Sounds.streamIdList[id] = soundPool.play(soundIdList[id], 1, 1, 0, -1, 1);
                                 setAudioPlaying(currentItem.getItemTitle(), true);
-                                Toast.makeText(mContext, "playing", Toast.LENGTH_SHORT).show();
                                 MainActivity.menuItemPlay.setTitle("Pause");
                                 MainActivity.menuItemPlay.setIcon(R.drawable.ic_pause);
                                 setAudioSelected(currentItem.getItemTitle(), true);
                                 Sounds.soundsPlayingCounter++;
+                                MainActivity.updateBadgeNumber(soundsPlayingCounter);
                                 holder.imgBtn.setImageResource(R.drawable.ic_pause);
                                 holder.imgBtn.setBackgroundResource(R.drawable.button_selected_background);
                             }
                         } else {
-
                             Sounds.streamIdList[id] = soundPool.play(soundIdList[id], 1, 1, 0, -1, 1);
                             setAudioPlaying(currentItem.getItemTitle(), true);
-                            Toast.makeText(mContext, "playing", Toast.LENGTH_SHORT).show();
                             MainActivity.menuItemPlay.setTitle("Pause");
                             MainActivity.menuItemPlay.setIcon(R.drawable.ic_pause);
                             setAudioSelected(currentItem.getItemTitle(), true);
                             Sounds.soundsPlayingCounter++;
+                            MainActivity.updateBadgeNumber(soundsPlayingCounter);
                             holder.imgBtn.setImageResource(R.drawable.ic_pause);
                             holder.imgBtn.setBackgroundResource(R.drawable.button_selected_background);
                         }
@@ -130,7 +128,6 @@ public class SoundListAdapter extends RecyclerView.Adapter<SoundListAdapter.Soun
                     if (soundsPlayingCounter > 0) {
                         soundPool.autoResume();
                     }
-//                    Toast.makeText(mContext, "play now", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -206,66 +203,50 @@ public class SoundListAdapter extends RecyclerView.Adapter<SoundListAdapter.Soun
     }
 
     private boolean isItemLoaded(String soundTitle) {
-        Log.v(TAG, "isItemLoaded Method called, soundTitle: " + soundTitle);
         switch (soundTitle) {
             case "bells":
-                Log.v(TAG, "bells case" + Sounds.isBellsSoundLoaded);
                 return Sounds.isBellsSoundLoaded;
 
             case "bird":
-                Log.v(TAG, "bird case");
                 return Sounds.isBirdSoundLoaded;
 
             case "clock chimes":
-                Log.v(TAG, "clock case");
                 return Sounds.isClockSoundLoaded;
 
             case "farm":
-                Log.v(TAG, "farm case");
                 return Sounds.isFarmSoundLoaded;
 
             case "fire":
-                Log.v(TAG, "fire case");
                 return Sounds.isFireSoundLoaded;
 
             case "flute":
-                Log.v(TAG, "flute case");
                 return Sounds.isFluteSoundLoaded;
 
             case "music box":
-                Log.v(TAG, "music case");
                 return Sounds.isMusicBoxSoundLoaded;
 
             case "night":
-                Log.v(TAG, "night case");
                 return Sounds.isNightSoundLoaded;
 
             case "rain":
-                Log.v(TAG, "rain case");
                 return Sounds.isRainSoundLoaded;
 
             case "rainforest":
-                Log.v(TAG, "rainforest case");
                 return Sounds.isRainForestSoundLoaded;
 
             case "river":
-                Log.v(TAG, "river case");
                 return Sounds.isRiverSoundLoaded;
 
             case "sea":
-                Log.v(TAG, "sea case");
                 return Sounds.isSeaSoundLoaded;
 
             case "thunder":
-                Log.v(TAG, "thunder case");
                 return Sounds.isThunderSoundLoaded;
 
             case "waterfall":
-                Log.v(TAG, "waterfall case");
                 return Sounds.isWaterfallSoundLoaded;
 
             case "wind":
-                Log.v(TAG, "wind case");
                 return Sounds.isWindSoundLoaded;
 
             default:
@@ -344,63 +325,48 @@ public class SoundListAdapter extends RecyclerView.Adapter<SoundListAdapter.Soun
     private boolean isAudioPlaying(String soundTitle) {
         switch (soundTitle) {
             case "bells":
-//                Log.v(TAG, "bells case" + Sounds.isBellsSoundLoaded);
                 return Sounds.isBellsSoundPlaying;
 
             case "bird":
-//                Log.v(TAG, "bird case");
                 return Sounds.isBirdSoundPlaying;
 
             case "clock chimes":
-//                Log.v(TAG, "clock case");
                 return Sounds.isClockSoundPlaying;
 
             case "farm":
-//                Log.v(TAG, "farm case");
                 return Sounds.isFarmSoundPlaying;
 
             case "fire":
-                Log.v(TAG, "fire case");
                 return Sounds.isFireSoundPlaying;
 
             case "flute":
-                Log.v(TAG, "flute case");
                 return Sounds.isFluteSoundPlaying;
 
             case "music box":
-                Log.v(TAG, "music case");
                 return Sounds.isMusicBoxSoundPlaying;
 
             case "night":
-                Log.v(TAG, "night case");
                 return Sounds.isNightSoundPlaying;
 
             case "rain":
-                Log.v(TAG, "rain case");
                 return Sounds.isRainSoundPlaying;
 
             case "rainforest":
-                Log.v(TAG, "rainforest case");
                 return Sounds.isRainForestSoundPlaying;
 
             case "river":
-                Log.v(TAG, "river case");
                 return Sounds.isRiverSoundPlaying;
 
             case "sea":
-                Log.v(TAG, "sea case");
                 return Sounds.isSeaSoundPlaying;
 
             case "thunder":
-                Log.v(TAG, "thunder case");
                 return Sounds.isThunderSoundPlaying;
 
             case "waterfall":
-                Log.v(TAG, "waterfall case");
                 return Sounds.isWaterfallSoundPlaying;
 
             case "wind":
-                Log.v(TAG, "wind case");
                 return Sounds.isWindSoundPlaying;
 
             default:
@@ -412,63 +378,48 @@ public class SoundListAdapter extends RecyclerView.Adapter<SoundListAdapter.Soun
     private boolean isAudioSelected(String soundTitle) {
         switch (soundTitle) {
             case "bells":
-//                Log.v(TAG, "bells case" + Sounds.isBellsSoundLoaded);
                 return Sounds.isBellsSoundSelected;
 
             case "bird":
-//                Log.v(TAG, "bird case");
                 return Sounds.isBirdSoundSelected;
 
             case "clock chimes":
-//                Log.v(TAG, "clock case");
                 return Sounds.isClockSoundSelected;
 
             case "farm":
-//                Log.v(TAG, "farm case");
                 return Sounds.isFarmSoundSelected;
 
             case "fire":
-                Log.v(TAG, "fire case");
                 return Sounds.isFireSoundSelected;
 
             case "flute":
-                Log.v(TAG, "flute case");
                 return Sounds.isFluteSoundSelected;
 
             case "music box":
-                Log.v(TAG, "music case");
                 return Sounds.isMusicBoxSoundSelected;
 
             case "night":
-                Log.v(TAG, "night case");
                 return Sounds.isNightSoundSelected;
 
             case "rain":
-                Log.v(TAG, "rain case");
                 return Sounds.isRainSoundSelected;
 
             case "rainforest":
-                Log.v(TAG, "rainforest case");
                 return Sounds.isRainForestSoundSelected;
 
             case "river":
-                Log.v(TAG, "river case");
                 return Sounds.isRiverSoundSelected;
 
             case "sea":
-                Log.v(TAG, "sea case");
                 return Sounds.isSeaSoundSelected;
 
             case "thunder":
-                Log.v(TAG, "thunder case");
                 return Sounds.isThunderSoundSelected;
 
             case "waterfall":
-                Log.v(TAG, "waterfall case");
                 return Sounds.isWaterfallSoundSelected;
 
             case "wind":
-                Log.v(TAG, "wind case");
                 return Sounds.isWindSoundSelected;
 
             default:
