@@ -6,10 +6,10 @@
         android:title="@string/play"
         android:icon="@drawable/ic_play"/>
 
-    <item
-        android:id="@+id/action_clear"
-        android:title="@string/clear"
-        android:icon="@android:drawable/ic_menu_close_clear_cancel"/>
+    <!--<item-->
+        <!--android:id="@+id/action_clear"-->
+        <!--android:title="@string/clear"-->
+        <!--android:icon="@android:drawable/ic_menu_close_clear_cancel"/>-->
 
     <item
         android:id="@+id/action_timer"

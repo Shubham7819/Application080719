@@ -2,6 +2,8 @@ package com.example.application080719;
 
 import android.media.SoundPool;
 
+import java.util.ArrayList;
+
 public class Sounds {
 
     public final static int BELLS = 0;
@@ -22,21 +24,6 @@ public class Sounds {
 
     public static SoundPool soundPool;
 
-    public static boolean isBellsSoundLoaded, isBirdSoundLoaded, isClockSoundLoaded,
-            isFarmSoundLoaded, isFireSoundLoaded, isFluteSoundLoaded, isMusicBoxSoundLoaded,
-            isNightSoundLoaded, isRainSoundLoaded, isRainForestSoundLoaded, isRiverSoundLoaded,
-            isSeaSoundLoaded, isThunderSoundLoaded, isWaterfallSoundLoaded, isWindSoundLoaded = false;
-
-    public static boolean isBellsSoundPlaying, isBirdSoundPlaying, isClockSoundPlaying,
-            isFarmSoundPlaying, isFireSoundPlaying, isFluteSoundPlaying, isMusicBoxSoundPlaying,
-            isNightSoundPlaying, isRainSoundPlaying, isRainForestSoundPlaying, isRiverSoundPlaying,
-            isSeaSoundPlaying, isThunderSoundPlaying, isWaterfallSoundPlaying, isWindSoundPlaying = false;
-
-    public static boolean isBellsSoundSelected, isBirdSoundSelected, isClockSoundSelected,
-            isFarmSoundSelected, isFireSoundSelected, isFluteSoundSelected, isMusicBoxSoundSelected,
-            isNightSoundSelected, isRainSoundSelected, isRainForestSoundSelected, isRiverSoundSelected,
-            isSeaSoundSelected, isThunderSoundSelected, isWaterfallSoundSelected, isWindSoundSelected = false;
-
     public static int[] soundIdList = new int[15];
 
     public static int[] streamIdList = new int[15];
@@ -44,5 +31,7 @@ public class Sounds {
     public static boolean allPaused = false;
 
     public static int soundsPlayingCounter = 0;
+
+    public static ArrayList<SoundItem> selectedSoundsList = new ArrayList<>();
 
 }

@@ -2,26 +2,26 @@ package com.example.application080719;
 
 public class MeditationExercise {
 
-    private String mExercisetitle;
+    private String mExerciseTitle;
 
     private String mExerciseGuides;
 
     private int mExerciseAudioResourceId;
 
-    public String getmExercisetitle() {
-        return mExercisetitle;
+    public String getExerciseTitle() {
+        return mExerciseTitle;
     }
 
-    public int getmExerciseAudioResourceId() {
+    public int getExerciseAudioResourceId() {
         return mExerciseAudioResourceId;
     }
 
-    public String getmExerciseGuides() {
+    public String getExerciseGuides() {
         return mExerciseGuides;
     }
 
-    public MeditationExercise(String mExercisetitle, String mExerciseGuides, int mExerciseAudioResourceId) {
-        this.mExercisetitle = mExercisetitle;
+    public MeditationExercise(String mExerciseTitle, String mExerciseGuides, int mExerciseAudioResourceId) {
+        this.mExerciseTitle = mExerciseTitle;
         this.mExerciseGuides = mExerciseGuides;
         this.mExerciseAudioResourceId = mExerciseAudioResourceId;
     }

@@ -27,7 +27,7 @@ public class CommonFragment extends Fragment {
 
     private ArrayList<MeditationExercise> briefExercisesList = new ArrayList<>();
     private int tabPosition = 0;
-    private ArrayList<SoundItem> soundItemsList = new ArrayList<>();
+    public static ArrayList<SoundItem> soundItemsList = new ArrayList<>();
     public static SoundListAdapter soundListAdapter;
 
     public CommonFragment() {

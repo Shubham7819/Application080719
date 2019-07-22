@@ -35,8 +35,8 @@ public class ExerciseListAdapter extends RecyclerView.Adapter<ExerciseListAdapte
     @Override
     public void onBindViewHolder(@NonNull final ExerciseViewHolder holder, int position) {
         MeditationExercise currentExercise = mExercisesList.get(position);
-        holder.titleTV.setText(currentExercise.getmExercisetitle());
-        holder.guidesTV.setText(currentExercise.getmExerciseGuides());
+        holder.titleTV.setText(currentExercise.getExerciseTitle());
+        holder.guidesTV.setText(currentExercise.getExerciseGuides());
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
