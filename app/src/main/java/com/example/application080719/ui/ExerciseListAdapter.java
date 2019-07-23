@@ -51,12 +51,12 @@ public class ExerciseListAdapter extends RecyclerView.Adapter<ExerciseListAdapte
         return mExercisesList.size();
     }
 
-    public class ExerciseViewHolder extends RecyclerView.ViewHolder {
+    class ExerciseViewHolder extends RecyclerView.ViewHolder {
 
         TextView titleTV;
         TextView guidesTV;
 
-        public ExerciseViewHolder(@NonNull View itemView) {
+        ExerciseViewHolder(@NonNull View itemView) {
             super(itemView);
             titleTV = itemView.findViewById(R.id.exercise_title_tv);
             guidesTV = itemView.findViewById(R.id.exercise_guides_tv);

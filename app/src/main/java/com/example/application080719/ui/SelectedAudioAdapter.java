@@ -12,7 +12,6 @@ import com.example.application080719.MainActivity;
 import com.example.application080719.R;
 import com.example.application080719.SoundItem;
 import com.example.application080719.Sounds;
-import com.example.application080719.ui.main.CommonFragment;
 
 import java.util.ArrayList;
 
@@ -51,13 +50,20 @@ public class SelectedAudioAdapter extends ArrayAdapter<SoundItem> {
                 if (currentSound.isItemPlaying()) {
                     Sounds.soundPool.pause(Sounds.streamIdList[id]);
                     currentSound.setItemPlaying(false);
+                    Sounds.soundsPlayingCounter--;
                     holder.playBackBtn.setImageResource(R.drawable.ic_play);
+                    if (Sounds.soundsPlayingCounter == 0) {
+                        MainActivity.menuItemPlay.setTitle(R.string.play);
+                        MainActivity.menuItemPlay.setIcon(R.drawable.ic_play);
+                    }
                 } else {
                     Sounds.soundPool.resume(Sounds.streamIdList[id]);
                     currentSound.setItemPlaying(true);
+                    Sounds.soundsPlayingCounter++;
                     holder.playBackBtn.setImageResource(R.drawable.ic_pause);
+                    MainActivity.menuItemPlay.setTitle(R.string.pause);
+                    MainActivity.menuItemPlay.setIcon(R.drawable.ic_pause);
                 }
-//                CommonFragment.soundListAdapter.notifyDataSetChanged();
             }
         });
 
@@ -68,16 +74,18 @@ public class SelectedAudioAdapter extends ArrayAdapter<SoundItem> {
             public void onClick(View view) {
                 Sounds.soundPool.stop(Sounds.streamIdList[id]);
                 currentSound.setItemPlaying(false);
+                currentSound.setItemSelected(false);
                 Sounds.soundsPlayingCounter--;
+                Sounds.soundsSelectedCounter--;
                 Sounds.selectedSoundsList.remove(currentSound);
-                MainActivity.updateBadgeNumber(Sounds.soundsPlayingCounter);
-                if (Sounds.soundsPlayingCounter > 0) {
+                MainActivity.updateBadgeNumber(Sounds.soundsSelectedCounter);
+                if (Sounds.soundsSelectedCounter > 0) {
                     Sounds.soundPool.autoResume();
                 } else {
                     MainActivity.menuItemPlay.setTitle(R.string.play);
                     MainActivity.menuItemPlay.setIcon(R.drawable.ic_play);
+                    MainActivity.selectionBottomSheetDialog.dismiss();
                 }
-                currentSound.setItemSelected(false);
                 Sounds.allPaused = false;
                 MainActivity.selectedAudioAdapter.notifyDataSetChanged();
             }

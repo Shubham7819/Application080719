@@ -11,6 +11,7 @@
     <string name="brief_practices">Brief Practices</string>
     <string name="body_scan">Body Scan</string>
     <string name="sounds">Sounds</string>
+    <string name="pause">Pause</string>
 
     <string-array name="duration">
         <item>Select Duration</item>

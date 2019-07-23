@@ -20,7 +20,7 @@ import java.util.ArrayList;
 
 import static com.example.application080719.Sounds.soundIdList;
 import static com.example.application080719.Sounds.soundPool;
-import static com.example.application080719.Sounds.soundsPlayingCounter;
+import static com.example.application080719.Sounds.soundsSelectedCounter;
 import static com.example.application080719.Sounds.streamIdList;
 
 public class SoundListAdapter extends RecyclerView.Adapter<SoundListAdapter.SoundViewHolder> {
@@ -46,16 +46,6 @@ public class SoundListAdapter extends RecyclerView.Adapter<SoundListAdapter.Soun
     public void onBindViewHolder(@NonNull final SoundViewHolder holder, int position) {
         final SoundItem currentItem = mSoundList.get(position);
 
-//        if (!Sounds.allPaused) {
-//            if (isAudioSelected(currentItem.getItemTitle())) {
-//                holder.imgBtn.setImageResource(R.drawable.ic_pause);
-//                setAudioPlaying(currentItem.getItemTitle(), true);
-//            } else {
-//                holder.imgBtn.setImageResource(R.drawable.ic_play);
-//            }
-//        } else {
-//            holder.imgBtn.setImageResource(R.drawable.ic_play);
-//        }
         if (currentItem.isItemPlaying()) {
             holder.imgBtn.setImageResource(R.drawable.ic_pause);
         } else {
@@ -74,76 +64,91 @@ public class SoundListAdapter extends RecyclerView.Adapter<SoundListAdapter.Soun
             @Override
             public void onClick(View view) {
                 id = getVarName(currentItem.getItemTitle());
+
                 if (currentItem.isItemLoaded()) {
+
                     if (currentItem.isItemPlaying()) {
+
                         soundPool.stop(streamIdList[id]);
                         currentItem.setItemPlaying(false);
+                        currentItem.setItemSelected(false);
                         Sounds.soundsPlayingCounter--;
+                        Sounds.soundsSelectedCounter--;
                         Sounds.selectedSoundsList.remove(currentItem);
                         MainActivity.selectedAudioAdapter.notifyDataSetChanged();
-                        MainActivity.updateBadgeNumber(soundsPlayingCounter);
-                        if (soundsPlayingCounter > 0) {
-                            resumeAll();
+                        MainActivity.updateBadgeNumber(soundsSelectedCounter);
+                        if (soundsSelectedCounter > 0) {
+                            for (int i = Sounds.BELLS; i <= Sounds.WIND; i++) {
+                                if (CommonFragment.soundItemsList.get(i).isItemSelected()) {
+                                    Sounds.soundPool.resume(Sounds.streamIdList[i]);
+                                    CommonFragment.soundItemsList.get(i).setItemPlaying(true);
+                                    Sounds.soundsPlayingCounter++;
+                                }
+                            }
                         } else {
                             MainActivity.menuItemPlay.setTitle(R.string.play);
                             MainActivity.menuItemPlay.setIcon(R.drawable.ic_play);
                         }
-                        currentItem.setItemSelected(false);
-                        holder.imgBtn.setImageResource(R.drawable.ic_play);
-                        holder.imgBtn.setBackgroundResource(R.drawable.button_background);
+
                     } else {
+
                         if (Sounds.allPaused) {
+
                             if (currentItem.isItemSelected()) {
-                                currentItem.setItemSelected(false);
+
                                 soundPool.stop(streamIdList[id]);
+                                currentItem.setItemPlaying(false);
+                                currentItem.setItemSelected(false);
                                 MainActivity.menuItemPlay.setTitle("Pause");
                                 MainActivity.menuItemPlay.setIcon(R.drawable.ic_pause);
                                 Sounds.soundsPlayingCounter--;
+                                Sounds.soundsSelectedCounter--;
                                 Sounds.selectedSoundsList.remove(currentItem);
                                 MainActivity.selectedAudioAdapter.notifyDataSetChanged();
-                                MainActivity.updateBadgeNumber(soundsPlayingCounter);
+                                MainActivity.updateBadgeNumber(soundsSelectedCounter);
+
                             } else {
+
                                 Sounds.streamIdList[id] = soundPool.play(soundIdList[id], 1, 1, 0, -1, 1);
                                 currentItem.setItemPlaying(true);
                                 MainActivity.menuItemPlay.setTitle("Pause");
                                 MainActivity.menuItemPlay.setIcon(R.drawable.ic_pause);
                                 currentItem.setItemSelected(true);
                                 Sounds.soundsPlayingCounter++;
+                                soundsSelectedCounter++;
                                 Sounds.selectedSoundsList.add(currentItem);
                                 MainActivity.selectedAudioAdapter.notifyDataSetChanged();
-                                MainActivity.updateBadgeNumber(soundsPlayingCounter);
-                                holder.imgBtn.setImageResource(R.drawable.ic_pause);
-                                holder.imgBtn.setBackgroundResource(R.drawable.button_selected_background);
+                                MainActivity.updateBadgeNumber(soundsSelectedCounter);
+
                             }
+
                         } else {
+
                             Sounds.streamIdList[id] = soundPool.play(soundIdList[id], 1, 1, 0, -1, 1);
                             currentItem.setItemPlaying(true);
                             MainActivity.menuItemPlay.setTitle("Pause");
                             MainActivity.menuItemPlay.setIcon(R.drawable.ic_pause);
                             currentItem.setItemSelected(true);
                             Sounds.soundsPlayingCounter++;
+                            soundsSelectedCounter++;
                             Sounds.selectedSoundsList.add(currentItem);
                             MainActivity.selectedAudioAdapter.notifyDataSetChanged();
-                            MainActivity.updateBadgeNumber(soundsPlayingCounter);
-                            holder.imgBtn.setImageResource(R.drawable.ic_pause);
-                            holder.imgBtn.setBackgroundResource(R.drawable.button_selected_background);
+                            MainActivity.updateBadgeNumber(soundsSelectedCounter);
+
                         }
-                        if (soundsPlayingCounter > 0) {
+                        if (soundsSelectedCounter > 0) {
                             resumeAll();
                         }
                         Sounds.allPaused = false;
                         notifyDataSetChanged();
+
                     }
+                    notifyDataSetChanged();
+
                 } else {
                     soundIdList[id] = soundPool.load(mContext, currentItem.getItemResourceId(), 1);
-                    holder.imgBtn.setImageResource(R.drawable.ic_pause);
-                    holder.imgBtn.setBackgroundResource(R.drawable.button_selected_background);
-                    if (soundsPlayingCounter > 0) {
-                        resumeAll();
-                    }
                     Sounds.selectedSoundsList.add(currentItem);
                 }
-                notifyDataSetChanged();
             }
         });
     }
@@ -165,7 +170,7 @@ public class SoundListAdapter extends RecyclerView.Adapter<SoundListAdapter.Soun
         }
     }
 
-    public static int getVarName(String soundTitle) {
+    static int getVarName(String soundTitle) {
         switch (soundTitle) {
             case "bells":
                 return Sounds.BELLS;
@@ -217,7 +222,7 @@ public class SoundListAdapter extends RecyclerView.Adapter<SoundListAdapter.Soun
         }
     }
 
-    void resumeAll() {
+    private void resumeAll() {
         for (int i = Sounds.BELLS; i <= Sounds.WIND; i++) {
             if (CommonFragment.soundItemsList.get(i).isItemSelected()) {
                 CommonFragment.soundItemsList.get(i).setItemPlaying(true);
