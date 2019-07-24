@@ -196,23 +196,49 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
         TextView minTV = timerSheetView.findViewById(R.id.minutes_count);
         TextView meridianTV = timerSheetView.findViewById(R.id.meridian_tv);
 
-        Calendar calendar = Calendar.getInstance();
         timePickerBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                Calendar calendar = Calendar.getInstance();
+                int currentHour = calendar.get(Calendar.HOUR_OF_DAY);
+                int currentMinutes = calendar.get(Calendar.MINUTE);
                 TimePickerDialog timePickerDialog = new TimePickerDialog(MainActivity.this, new TimePickerDialog.OnTimeSetListener() {
                     @Override
-                    public void onTimeSet(TimePicker timePicker, int hourOfDay, int minute) {
-                        if (hourOfDay > 12) {
-                            hourTV.setText(String.valueOf(hourOfDay - 12));
-                            meridianTV.setText("PM");
+                    public void onTimeSet(TimePicker timePicker, int selectedHour, int selectedMinute) {
+                        if (selectedHour >= currentHour) {
+                            int timerHour;
+                            int timerMinutes;
+                            if (selectedMinute > currentMinutes) {
+                                timerHour = selectedHour - currentHour;//(selectedHour - currentHour == 0) ? 1 : (selectedHour - currentHour);
+                                timerMinutes = selectedMinute - currentMinutes;
+                                timerMinutes += (timerHour * 60);
+                            } else {
+                                if (selectedHour - currentHour > 1) {
+                                    timerHour = (selectedHour - currentHour) - 1;
+                                } else if (selectedHour - currentHour < 1) {
+                                    Toast.makeText(MainActivity.this, "Please select valid time.", Toast.LENGTH_SHORT).show();
+                                    return;
+                                } else {
+                                    timerHour = (selectedHour - currentHour) - 1;
+                                }
+                                timerMinutes = 60 - currentMinutes + selectedMinute;
+                                timerMinutes += (timerHour * 60);
+                                if (selectedMinute == currentMinutes) {
+                                    timerMinutes = 60;
+                                    if (selectedHour - currentHour == 0) {
+                                        Toast.makeText(MainActivity.this, "Please select valid time.", Toast.LENGTH_SHORT).show();
+                                        return;
+                                    }
+                                }
+                            }
+                            timeLeftInMillis = timerMinutes * 60 * 1000;
+                            startTimer();
+                            showCountDownLayout();
                         } else {
-                            hourTV.setText(String.valueOf(hourOfDay));
-                            meridianTV.setText("AM");
+                            Toast.makeText(MainActivity.this, "Please select valid time.", Toast.LENGTH_SHORT).show();
                         }
-                        minTV.setText(String.valueOf(minute));
                     }
-                }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), false);
+                }, currentHour, currentMinutes, false);
                 timePickerDialog.show();
             }
         });

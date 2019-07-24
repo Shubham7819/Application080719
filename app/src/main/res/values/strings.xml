@@ -12,6 +12,8 @@
     <string name="body_scan">Body Scan</string>
     <string name="sounds">Sounds</string>
     <string name="pause">Pause</string>
+    <string name="pm">PM</string>
+    <string name="am">AM</string>
 
     <string-array name="duration">
         <item>Select Duration</item>
