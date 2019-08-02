@@ -1,11 +1,17 @@
 package com.example.application080719;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.TimePickerDialog;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.media.AudioManager;
 import android.media.SoundPool;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -35,7 +41,8 @@ import com.google.android.material.tabs.TabLayout;
 import java.util.Calendar;
 import java.util.Locale;
 
-public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadCompleteListener {
+public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadCompleteListener
+        , SharedPreferences.OnSharedPreferenceChangeListener {
 
     final String TAG = MainActivity.class.getSimpleName();
     BottomNavigationView bottomNavigationView;
@@ -54,10 +61,6 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
     boolean mTimerRunning;
     long timeLeftInMillis;
 
-    //TODO:
-    // -
-    // -
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -72,17 +75,26 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
 
         bottomNavigationView = findViewById(R.id.bottom_nav);
 
-        // Setting Badge for BottomNavigationView's Selection MenuItem
-        int selectionMenuItemId = bottomNavigationView.getMenu().getItem(2).getItemId();
-        audioPlayingCountBadge = bottomNavigationView.getOrCreateBadge(selectionMenuItemId);
-        audioPlayingCountBadge.setBadgeTextColor(getResources().getColor(R.color.colorAccent));
-        audioPlayingCountBadge.setBackgroundColor(getResources().getColor(R.color.colorTitle));
-        audioPlayingCountBadge.setVisible(false);
+        setUpBadge();
+        updateBadgeNumber();
 
         // Setting label visibility type for BottomNavigationView
         bottomNavigationView.setLabelVisibilityMode(LabelVisibilityMode.LABEL_VISIBILITY_LABELED);
 
         menuItemPlay = bottomNavigationView.getMenu().getItem(0);
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            NotificationChannel playingAudioChannel = new NotificationChannel(getString(R.string.app_name)
+                    , "Current Playing", NotificationManager.IMPORTANCE_DEFAULT);
+            playingAudioChannel.setLightColor(Color.GREEN);
+            NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            nm.createNotificationChannel(playingAudioChannel);
+        }
+
+        /** Setup the shared preference listener **/
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        prefs.registerOnSharedPreferenceChangeListener(this);
+
     }
 
     @Override
@@ -249,12 +261,12 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
                 if (menuItem.getItemId() == R.id.action_play) {
                     String menuTitle = menuItem.getTitle().toString();
                     if (getString(R.string.play).equals(menuTitle)) {
-                        if (Sounds.soundsSelectedCounter > 0) {
+                        if (PreferenceUtilities.getSoundsSelectedCount(MainActivity.this) > 0) {
                             for (int i = Sounds.BELLS; i <= Sounds.WIND; i++) {
                                 if (CommonFragment.soundItemsList.get(i).isItemSelected()) {
                                     CommonFragment.soundItemsList.get(i).setItemPlaying(true);
                                     Sounds.soundPool.resume(Sounds.streamIdList[i]);
-                                    Sounds.soundsPlayingCounter++;
+                                    PreferenceUtilities.incrementSoundsPlayingCount(MainActivity.this);
                                 }
                             }
                             menuItem.setTitle(R.string.pause);
@@ -269,14 +281,14 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
                         for (int i = Sounds.BELLS; i <= Sounds.WIND; i++) {
                             if (CommonFragment.soundItemsList.get(i).isItemPlaying()) {
                                 CommonFragment.soundItemsList.get(i).setItemPlaying(false);
-                                Sounds.soundsPlayingCounter--;
+                                PreferenceUtilities.decrementSoundsPlayingCount(MainActivity.this);
                             }
                         }
                         Sounds.allPaused = true;
                     }
                     CommonFragment.soundListAdapter.notifyDataSetChanged();
                 } else if (menuItem.getItemId() == R.id.action_selecction) {
-                    if (Sounds.soundsSelectedCounter > 0) {
+                    if (PreferenceUtilities.getSoundsSelectedCount(MainActivity.this) > 0) {
                         MainActivity.selectedAudioAdapter.notifyDataSetChanged();
                         selectionBottomSheetDialog.show();
                     } else
@@ -292,11 +304,16 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
     @Override
     protected void onDestroy() {
         Log.v(TAG, "onDestroy called...");
+
         if (Sounds.soundPool != null) {
             Sounds.soundPool.release();
             Sounds.soundPool = null;
         }
         super.onDestroy();
+
+        /** Cleanup the shared preference listener **/
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        prefs.unregisterOnSharedPreferenceChangeListener(this);
     }
 
     @Override
@@ -399,26 +416,26 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
     }
 
     void supportMethod() {
-        Sounds.soundsSelectedCounter++;
-        Sounds.soundsPlayingCounter++;
+        PreferenceUtilities.incrementSoundsSelectedCount(this);
+        PreferenceUtilities.incrementSoundsPlayingCount(this);
         menuItemPlay.setTitle("Pause");
         menuItemPlay.setIcon(R.drawable.ic_pause);
         Sounds.allPaused = false;
-        updateBadgeNumber(Sounds.soundsSelectedCounter);
         for (int i = Sounds.BELLS; i <= Sounds.WIND; i++) {
             if (CommonFragment.soundItemsList.get(i).isItemSelected()) {
                 Sounds.soundPool.resume(Sounds.streamIdList[i]);
                 CommonFragment.soundItemsList.get(i).setItemPlaying(true);
-                Sounds.soundsPlayingCounter++;
+                PreferenceUtilities.incrementSoundsPlayingCount(this);
             }
         }
         CommonFragment.soundListAdapter.notifyDataSetChanged();
         MainActivity.selectedAudioAdapter.notifyDataSetChanged();
     }
 
-    public static void updateBadgeNumber(int number) {
-        audioPlayingCountBadge.setNumber(number);
-        if (number > 0) {
+    public void updateBadgeNumber() {
+        int selectedSoundsCount = PreferenceUtilities.getSoundsSelectedCount(MainActivity.this);
+        audioPlayingCountBadge.setNumber(selectedSoundsCount);
+        if (selectedSoundsCount > 0) {
             audioPlayingCountBadge.setVisible(true);
         } else {
             audioPlayingCountBadge.setVisible(false);
@@ -431,12 +448,11 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
                 Sounds.soundPool.stop(Sounds.streamIdList[i]);
                 CommonFragment.soundItemsList.get(i).setItemPlaying(false);
                 CommonFragment.soundItemsList.get(i).setItemSelected(false);
-                Sounds.soundsPlayingCounter--;
-                Sounds.soundsSelectedCounter--;
+                PreferenceUtilities.decrementSoundsPlayingCount(this);
+                PreferenceUtilities.decrementSoundsSelectedCount(this);
                 Sounds.selectedSoundsList.remove(CommonFragment.soundItemsList.get(i));
             }
         }
-        MainActivity.updateBadgeNumber(Sounds.soundsSelectedCounter);
         MainActivity.menuItemPlay.setTitle(R.string.play);
         MainActivity.menuItemPlay.setIcon(R.drawable.ic_play);
         CommonFragment.soundListAdapter.notifyDataSetChanged();
@@ -474,5 +490,21 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
             }
         }.start();
         mTimerRunning = true;
+    }
+
+    void setUpBadge() {
+        // Setting Badge for BottomNavigationView's Selection MenuItem
+        int selectionMenuItemId = bottomNavigationView.getMenu().getItem(2).getItemId();
+        audioPlayingCountBadge = bottomNavigationView.getOrCreateBadge(selectionMenuItemId);
+        audioPlayingCountBadge.setBadgeTextColor(getResources().getColor(R.color.colorAccent));
+        audioPlayingCountBadge.setBackgroundColor(getResources().getColor(R.color.colorTitle));
+        audioPlayingCountBadge.setVisible(false);
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if (PreferenceUtilities.KEY_SOUNDS_SELECTED_COUNTER.equals(key)) {
+            updateBadgeNumber();
+        }
     }
 }

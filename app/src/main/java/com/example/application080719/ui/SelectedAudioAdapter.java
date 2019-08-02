@@ -1,6 +1,7 @@
 package com.example.application080719.ui;
 
 import android.app.Activity;
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,6 +10,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.application080719.MainActivity;
+import com.example.application080719.PreferenceUtilities;
 import com.example.application080719.R;
 import com.example.application080719.SoundItem;
 import com.example.application080719.Sounds;
@@ -16,6 +18,8 @@ import com.example.application080719.Sounds;
 import java.util.ArrayList;
 
 public class SelectedAudioAdapter extends ArrayAdapter<SoundItem> {
+
+    private Context context;
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
@@ -50,16 +54,16 @@ public class SelectedAudioAdapter extends ArrayAdapter<SoundItem> {
                 if (currentSound.isItemPlaying()) {
                     Sounds.soundPool.pause(Sounds.streamIdList[id]);
                     currentSound.setItemPlaying(false);
-                    Sounds.soundsPlayingCounter--;
+                    PreferenceUtilities.decrementSoundsPlayingCount(context);
                     holder.playBackBtn.setImageResource(R.drawable.ic_play);
-                    if (Sounds.soundsPlayingCounter == 0) {
+                    if (PreferenceUtilities.getSoundsPlayingCount(context) == 0) {
                         MainActivity.menuItemPlay.setTitle(R.string.play);
                         MainActivity.menuItemPlay.setIcon(R.drawable.ic_play);
                     }
                 } else {
                     Sounds.soundPool.resume(Sounds.streamIdList[id]);
                     currentSound.setItemPlaying(true);
-                    Sounds.soundsPlayingCounter++;
+                    PreferenceUtilities.incrementSoundsPlayingCount(context);
                     holder.playBackBtn.setImageResource(R.drawable.ic_pause);
                     MainActivity.menuItemPlay.setTitle(R.string.pause);
                     MainActivity.menuItemPlay.setIcon(R.drawable.ic_pause);
@@ -75,11 +79,10 @@ public class SelectedAudioAdapter extends ArrayAdapter<SoundItem> {
                 Sounds.soundPool.stop(Sounds.streamIdList[id]);
                 currentSound.setItemPlaying(false);
                 currentSound.setItemSelected(false);
-                Sounds.soundsPlayingCounter--;
-                Sounds.soundsSelectedCounter--;
+                PreferenceUtilities.decrementSoundsPlayingCount(context);
+                PreferenceUtilities.decrementSoundsSelectedCount(context);
                 Sounds.selectedSoundsList.remove(currentSound);
-                MainActivity.updateBadgeNumber(Sounds.soundsSelectedCounter);
-                if (Sounds.soundsSelectedCounter > 0) {
+                if (PreferenceUtilities.getSoundsSelectedCount(context) > 0) {
                     Sounds.soundPool.autoResume();
                 } else {
                     MainActivity.menuItemPlay.setTitle(R.string.play);
@@ -98,6 +101,7 @@ public class SelectedAudioAdapter extends ArrayAdapter<SoundItem> {
 
     public SelectedAudioAdapter(Activity context, ArrayList<SoundItem> items) {
         super(context, 0, items);
+        this.context = context;
     }
 
     private static class ViewHolder {

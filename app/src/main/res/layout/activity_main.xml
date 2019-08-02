@@ -56,6 +56,4 @@
 
     </androidx.core.widget.NestedScrollView>
 
-    <!--<include layout="@layout/timer_bottom_sheet" />-->
-
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

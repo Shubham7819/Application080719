@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.application080719.MainActivity;
+import com.example.application080719.PreferenceUtilities;
 import com.example.application080719.R;
 import com.example.application080719.SoundItem;
 import com.example.application080719.Sounds;
@@ -20,7 +21,6 @@ import java.util.ArrayList;
 
 import static com.example.application080719.Sounds.soundIdList;
 import static com.example.application080719.Sounds.soundPool;
-import static com.example.application080719.Sounds.soundsSelectedCounter;
 import static com.example.application080719.Sounds.streamIdList;
 
 public class SoundListAdapter extends RecyclerView.Adapter<SoundListAdapter.SoundViewHolder> {
@@ -72,17 +72,16 @@ public class SoundListAdapter extends RecyclerView.Adapter<SoundListAdapter.Soun
                         soundPool.stop(streamIdList[id]);
                         currentItem.setItemPlaying(false);
                         currentItem.setItemSelected(false);
-                        Sounds.soundsPlayingCounter--;
-                        Sounds.soundsSelectedCounter--;
+                        PreferenceUtilities.decrementSoundsPlayingCount(mContext);
+                        PreferenceUtilities.decrementSoundsSelectedCount(mContext);
                         Sounds.selectedSoundsList.remove(currentItem);
                         MainActivity.selectedAudioAdapter.notifyDataSetChanged();
-                        MainActivity.updateBadgeNumber(soundsSelectedCounter);
-                        if (soundsSelectedCounter > 0) {
+                        if (PreferenceUtilities.getSoundsSelectedCount(mContext) > 0) {
                             for (int i = Sounds.BELLS; i <= Sounds.WIND; i++) {
                                 if (CommonFragment.soundItemsList.get(i).isItemSelected()) {
                                     Sounds.soundPool.resume(Sounds.streamIdList[i]);
                                     CommonFragment.soundItemsList.get(i).setItemPlaying(true);
-                                    Sounds.soundsPlayingCounter++;
+                                    PreferenceUtilities.incrementSoundsPlayingCount(mContext);
                                 }
                             }
                         } else {
@@ -101,11 +100,10 @@ public class SoundListAdapter extends RecyclerView.Adapter<SoundListAdapter.Soun
                                 currentItem.setItemSelected(false);
                                 MainActivity.menuItemPlay.setTitle("Pause");
                                 MainActivity.menuItemPlay.setIcon(R.drawable.ic_pause);
-                                Sounds.soundsPlayingCounter--;
-                                Sounds.soundsSelectedCounter--;
+                                PreferenceUtilities.decrementSoundsPlayingCount(mContext);
+                                PreferenceUtilities.decrementSoundsSelectedCount(mContext);
                                 Sounds.selectedSoundsList.remove(currentItem);
                                 MainActivity.selectedAudioAdapter.notifyDataSetChanged();
-                                MainActivity.updateBadgeNumber(soundsSelectedCounter);
 
                             } else {
 
@@ -114,11 +112,10 @@ public class SoundListAdapter extends RecyclerView.Adapter<SoundListAdapter.Soun
                                 MainActivity.menuItemPlay.setTitle("Pause");
                                 MainActivity.menuItemPlay.setIcon(R.drawable.ic_pause);
                                 currentItem.setItemSelected(true);
-                                Sounds.soundsPlayingCounter++;
-                                soundsSelectedCounter++;
+                                PreferenceUtilities.incrementSoundsPlayingCount(mContext);
+                                PreferenceUtilities.incrementSoundsSelectedCount(mContext);
                                 Sounds.selectedSoundsList.add(currentItem);
                                 MainActivity.selectedAudioAdapter.notifyDataSetChanged();
-                                MainActivity.updateBadgeNumber(soundsSelectedCounter);
 
                             }
 
@@ -129,14 +126,13 @@ public class SoundListAdapter extends RecyclerView.Adapter<SoundListAdapter.Soun
                             MainActivity.menuItemPlay.setTitle("Pause");
                             MainActivity.menuItemPlay.setIcon(R.drawable.ic_pause);
                             currentItem.setItemSelected(true);
-                            Sounds.soundsPlayingCounter++;
-                            soundsSelectedCounter++;
+                            PreferenceUtilities.incrementSoundsPlayingCount(mContext);
+                            PreferenceUtilities.incrementSoundsSelectedCount(mContext);
                             Sounds.selectedSoundsList.add(currentItem);
                             MainActivity.selectedAudioAdapter.notifyDataSetChanged();
-                            MainActivity.updateBadgeNumber(soundsSelectedCounter);
 
                         }
-                        if (soundsSelectedCounter > 0) {
+                        if (PreferenceUtilities.getSoundsSelectedCount(mContext) > 0) {
                             resumeAll();
                         }
                         Sounds.allPaused = false;

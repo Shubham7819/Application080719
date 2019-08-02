@@ -30,8 +30,6 @@ public class Sounds {
 
     public static boolean allPaused = false;
 
-    public static int soundsPlayingCounter, soundsSelectedCounter = 0;
-
     public static ArrayList<SoundItem> selectedSoundsList = new ArrayList<>();
 
 }
