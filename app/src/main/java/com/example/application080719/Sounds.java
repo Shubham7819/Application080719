@@ -1,7 +1,5 @@
 package com.example.application080719;
 
-import android.media.SoundPool;
-
 import java.util.ArrayList;
 
 public class Sounds {
@@ -21,8 +19,6 @@ public class Sounds {
     public final static int THUNDER = 12;
     public final static int WATERFALL = 13;
     public final static int WIND = 14;
-
-    public static SoundPool soundPool;
 
     public static int[] soundIdList = new int[15];
 

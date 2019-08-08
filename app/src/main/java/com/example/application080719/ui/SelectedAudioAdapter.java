@@ -52,21 +52,15 @@ public class SelectedAudioAdapter extends ArrayAdapter<SoundItem> {
             @Override
             public void onClick(View view) {
                 if (currentSound.isItemPlaying()) {
-                    Sounds.soundPool.pause(Sounds.streamIdList[id]);
+                    MainActivity.playerService.pauseAudio(Sounds.streamIdList[id]);
                     currentSound.setItemPlaying(false);
                     PreferenceUtilities.decrementSoundsPlayingCount(context);
                     holder.playBackBtn.setImageResource(R.drawable.ic_play);
-                    if (PreferenceUtilities.getSoundsPlayingCount(context) == 0) {
-                        MainActivity.menuItemPlay.setTitle(R.string.play);
-                        MainActivity.menuItemPlay.setIcon(R.drawable.ic_play);
-                    }
                 } else {
-                    Sounds.soundPool.resume(Sounds.streamIdList[id]);
+                    MainActivity.playerService.resumeAudio(Sounds.streamIdList[id]);
                     currentSound.setItemPlaying(true);
                     PreferenceUtilities.incrementSoundsPlayingCount(context);
                     holder.playBackBtn.setImageResource(R.drawable.ic_pause);
-                    MainActivity.menuItemPlay.setTitle(R.string.pause);
-                    MainActivity.menuItemPlay.setIcon(R.drawable.ic_pause);
                 }
             }
         });
@@ -76,17 +70,15 @@ public class SelectedAudioAdapter extends ArrayAdapter<SoundItem> {
         holder.stopBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Sounds.soundPool.stop(Sounds.streamIdList[id]);
+                MainActivity.playerService.stopAudio(Sounds.streamIdList[id]);
                 currentSound.setItemPlaying(false);
                 currentSound.setItemSelected(false);
                 PreferenceUtilities.decrementSoundsPlayingCount(context);
                 PreferenceUtilities.decrementSoundsSelectedCount(context);
                 Sounds.selectedSoundsList.remove(currentSound);
                 if (PreferenceUtilities.getSoundsSelectedCount(context) > 0) {
-                    Sounds.soundPool.autoResume();
+                    MainActivity.playerService.getPlayer().autoResume();
                 } else {
-                    MainActivity.menuItemPlay.setTitle(R.string.play);
-                    MainActivity.menuItemPlay.setIcon(R.drawable.ic_play);
                     MainActivity.selectionBottomSheetDialog.dismiss();
                 }
                 Sounds.allPaused = false;
@@ -94,7 +86,7 @@ public class SelectedAudioAdapter extends ArrayAdapter<SoundItem> {
             }
         });
 
-        // Return the whole list item layout (containing 2 TextViews and an ImageView)
+        // Return the whole list item layout (containing 2 ImageView and an TextViews)
         // so that it can be shown in the ListView
         return convertView;
     }

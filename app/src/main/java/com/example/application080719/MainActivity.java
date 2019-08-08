@@ -1,16 +1,15 @@
 package com.example.application080719;
 
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
 import android.app.TimePickerDialog;
-import android.content.Context;
+import android.content.ComponentName;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.graphics.Color;
-import android.media.AudioManager;
 import android.media.SoundPool;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.MenuItem;
@@ -46,20 +45,21 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
 
     final String TAG = MainActivity.class.getSimpleName();
     BottomNavigationView bottomNavigationView;
-    public static MenuItem menuItemPlay;
+    public MenuItem menuItemPlay;
     static BadgeDrawable audioPlayingCountBadge;
     public static SelectedAudioAdapter selectedAudioAdapter;
 
     BottomSheetDialog timerBottomSheetDialog;
-    View selectTimeLayout;
-    View countDownLayout;
+    View selectTimeLayout, countDownLayout;
     public static BottomSheetDialog selectionBottomSheetDialog;
 
     TextView countDownTV;
     Button stopCountDownBtn;
     CountDownTimer countDownTimer;
-    boolean mTimerRunning;
+    boolean mTimerRunning, isBind;
     long timeLeftInMillis;
+    public static PlayerService playerService;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,14 +82,7 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
         bottomNavigationView.setLabelVisibilityMode(LabelVisibilityMode.LABEL_VISIBILITY_LABELED);
 
         menuItemPlay = bottomNavigationView.getMenu().getItem(0);
-
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            NotificationChannel playingAudioChannel = new NotificationChannel(getString(R.string.app_name)
-                    , "Current Playing", NotificationManager.IMPORTANCE_DEFAULT);
-            playingAudioChannel.setLightColor(Color.GREEN);
-            NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-            nm.createNotificationChannel(playingAudioChannel);
-        }
+        updatePlaybackBtn();
 
         /** Setup the shared preference listener **/
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -97,13 +90,34 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
 
     }
 
+    ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            Log.v(TAG, "OnServiceConnected called.");
+            // get the local service instance
+            PlayerService.LocalService localService = (PlayerService.LocalService) service;
+            playerService = localService.getService();
+            setListenerForSoundPool();
+            isBind = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            Log.v(TAG, "onServiceDisconnected called.");
+            playerService = null;
+            isBind = false;
+        }
+    };
+
+    //COMPLETED start and bind with service on activity start if service not exists
+    //COMPLETED bind with service on activity start if service already exists
     @Override
     protected void onStart() {
         super.onStart();
 
         // Initialize SoundPool Object.
-        Sounds.soundPool = new SoundPool(15, AudioManager.STREAM_MUSIC, 0);
-        Sounds.soundPool.setOnLoadCompleteListener(this);
+        startServiceIfNotAlready();
+        isBind = bindService(new Intent(this, PlayerService.class), serviceConnection, 0);
 
         // ***** Selection MenuItem of BottomNavigationView *****
         selectionBottomSheetDialog = new BottomSheetDialog(this);
@@ -135,7 +149,7 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
                 selectionBottomSheetDialog.dismiss();
             }
         });
-
+        //TODO 9) create method to update selectedSoundsList when activity starts by checking sharedPref
         ListView currentPlayingList = selectionSheetView.findViewById(R.id.current_playing_list);
         selectedAudioAdapter = new SelectedAudioAdapter(this, Sounds.selectedSoundsList);
         currentPlayingList.setAdapter(selectedAudioAdapter);
@@ -204,10 +218,6 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
         });
 
         LinearLayout timePickerBtn = timerSheetView.findViewById(R.id.time_picker_btn);
-        TextView hourTV = timerSheetView.findViewById(R.id.hours_count);
-        TextView minTV = timerSheetView.findViewById(R.id.minutes_count);
-        TextView meridianTV = timerSheetView.findViewById(R.id.meridian_tv);
-
         timePickerBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -221,7 +231,7 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
                             int timerHour;
                             int timerMinutes;
                             if (selectedMinute > currentMinutes) {
-                                timerHour = selectedHour - currentHour;//(selectedHour - currentHour == 0) ? 1 : (selectedHour - currentHour);
+                                timerHour = selectedHour - currentHour;
                                 timerMinutes = selectedMinute - currentMinutes;
                                 timerMinutes += (timerHour * 60);
                             } else {
@@ -265,7 +275,7 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
                             for (int i = Sounds.BELLS; i <= Sounds.WIND; i++) {
                                 if (CommonFragment.soundItemsList.get(i).isItemSelected()) {
                                     CommonFragment.soundItemsList.get(i).setItemPlaying(true);
-                                    Sounds.soundPool.resume(Sounds.streamIdList[i]);
+                                    MainActivity.playerService.resumeAudio(Sounds.streamIdList[i]);
                                     PreferenceUtilities.incrementSoundsPlayingCount(MainActivity.this);
                                 }
                             }
@@ -275,7 +285,7 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
                         } else
                             Toast.makeText(MainActivity.this, "Select some sounds first.", Toast.LENGTH_SHORT).show();
                     } else {
-                        Sounds.soundPool.autoPause();
+                        MainActivity.playerService.getPlayer().autoPause();
                         menuItem.setTitle(R.string.play);
                         menuItem.setIcon(R.drawable.ic_play);
                         for (int i = Sounds.BELLS; i <= Sounds.WIND; i++) {
@@ -299,17 +309,22 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
                 return true;
             }
         });
+
+
     }
 
+    //COMPLETED stop and unbind service on activity destroy if no sound is selected
     @Override
     protected void onDestroy() {
         Log.v(TAG, "onDestroy called...");
 
-        if (Sounds.soundPool != null) {
-            Sounds.soundPool.release();
-            Sounds.soundPool = null;
-        }
         super.onDestroy();
+
+        if (PreferenceUtilities.getSoundsSelectedCount(this) == 0) {
+            if (isBind)
+                unbindService(serviceConnection);
+            stopService(new Intent(this, PlayerService.class));
+        }
 
         /** Cleanup the shared preference listener **/
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -320,116 +335,92 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
     public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
         if (status == 0) {
             if (sampleId == Sounds.soundIdList[Sounds.BELLS]) {
-                CommonFragment.soundItemsList.get(Sounds.BELLS).setItemLoaded(true);
-                Sounds.streamIdList[Sounds.BELLS] = soundPool.play(sampleId, 1, 1, 0, -1, 1);
-                CommonFragment.soundItemsList.get(Sounds.BELLS).setItemPlaying(true);
-                CommonFragment.soundItemsList.get(Sounds.BELLS).setItemSelected(true);
-                supportMethod();
+                supportMethod(soundPool, Sounds.BELLS, sampleId);
             } else if (sampleId == Sounds.soundIdList[Sounds.BIRD]) {
-                CommonFragment.soundItemsList.get(Sounds.BIRD).setItemLoaded(true);
-                Sounds.streamIdList[Sounds.BIRD] = soundPool.play(sampleId, 1, 1, 0, -1, 1);
-                CommonFragment.soundItemsList.get(Sounds.BIRD).setItemPlaying(true);
-                CommonFragment.soundItemsList.get(Sounds.BIRD).setItemSelected(true);
-                supportMethod();
+                supportMethod(soundPool, Sounds.BIRD, sampleId);
             } else if (sampleId == Sounds.soundIdList[Sounds.CLOCK_CHIMES]) {
-                CommonFragment.soundItemsList.get(Sounds.CLOCK_CHIMES).setItemLoaded(true);
-                Sounds.streamIdList[Sounds.CLOCK_CHIMES] = soundPool.play(sampleId, 1, 1, 0, -1, 1);
-                CommonFragment.soundItemsList.get(Sounds.CLOCK_CHIMES).setItemPlaying(true);
-                CommonFragment.soundItemsList.get(Sounds.CLOCK_CHIMES).setItemSelected(true);
-                supportMethod();
+                supportMethod(soundPool, Sounds.CLOCK_CHIMES, sampleId);
             } else if (sampleId == Sounds.soundIdList[Sounds.FARM]) {
-                CommonFragment.soundItemsList.get(Sounds.FARM).setItemLoaded(true);
-                Sounds.streamIdList[Sounds.FARM] = soundPool.play(sampleId, 1, 1, 0, -1, 1);
-                CommonFragment.soundItemsList.get(Sounds.FARM).setItemPlaying(true);
-                CommonFragment.soundItemsList.get(Sounds.FARM).setItemSelected(true);
-                supportMethod();
+                supportMethod(soundPool, Sounds.FARM, sampleId);
             } else if (sampleId == Sounds.soundIdList[Sounds.FIRE]) {
-                CommonFragment.soundItemsList.get(Sounds.FIRE).setItemLoaded(true);
-                Sounds.streamIdList[Sounds.FIRE] = soundPool.play(sampleId, 1, 1, 0, -1, 1);
-                CommonFragment.soundItemsList.get(Sounds.FIRE).setItemPlaying(true);
-                CommonFragment.soundItemsList.get(Sounds.FIRE).setItemSelected(true);
-                supportMethod();
+                supportMethod(soundPool, Sounds.FIRE, sampleId);
             } else if (sampleId == Sounds.soundIdList[Sounds.FLUTE]) {
-                CommonFragment.soundItemsList.get(Sounds.FLUTE).setItemLoaded(true);
-                Sounds.streamIdList[Sounds.FLUTE] = soundPool.play(sampleId, 1, 1, 0, -1, 1);
-                CommonFragment.soundItemsList.get(Sounds.FLUTE).setItemPlaying(true);
-                CommonFragment.soundItemsList.get(Sounds.FLUTE).setItemSelected(true);
-                supportMethod();
+                supportMethod(soundPool, Sounds.FLUTE, sampleId);
             } else if (sampleId == Sounds.soundIdList[Sounds.MUSIC_BOX]) {
-                CommonFragment.soundItemsList.get(Sounds.MUSIC_BOX).setItemLoaded(true);
-                Sounds.streamIdList[Sounds.MUSIC_BOX] = soundPool.play(sampleId, 1, 1, 0, -1, 1);
-                CommonFragment.soundItemsList.get(Sounds.MUSIC_BOX).setItemPlaying(true);
-                CommonFragment.soundItemsList.get(Sounds.MUSIC_BOX).setItemSelected(true);
-                supportMethod();
+                supportMethod(soundPool, Sounds.MUSIC_BOX, sampleId);
             } else if (sampleId == Sounds.soundIdList[Sounds.NIGHT]) {
-                CommonFragment.soundItemsList.get(Sounds.NIGHT).setItemLoaded(true);
-                Sounds.streamIdList[Sounds.NIGHT] = soundPool.play(sampleId, 1, 1, 0, -1, 1);
-                CommonFragment.soundItemsList.get(Sounds.NIGHT).setItemPlaying(true);
-                CommonFragment.soundItemsList.get(Sounds.NIGHT).setItemSelected(true);
-                supportMethod();
+                supportMethod(soundPool, Sounds.NIGHT, sampleId);
             } else if (sampleId == Sounds.soundIdList[Sounds.RAIN]) {
-                CommonFragment.soundItemsList.get(Sounds.RAIN).setItemLoaded(true);
-                Sounds.streamIdList[Sounds.RAIN] = soundPool.play(sampleId, 1, 1, 0, -1, 1);
-                CommonFragment.soundItemsList.get(Sounds.RAIN).setItemPlaying(true);
-                CommonFragment.soundItemsList.get(Sounds.RAIN).setItemSelected(true);
-                supportMethod();
+                supportMethod(soundPool, Sounds.RAIN, sampleId);
             } else if (sampleId == Sounds.soundIdList[Sounds.RAINFOREST]) {
-                CommonFragment.soundItemsList.get(Sounds.RAINFOREST).setItemLoaded(true);
-                Sounds.streamIdList[Sounds.RAINFOREST] = soundPool.play(sampleId, 1, 1, 0, -1, 1);
-                CommonFragment.soundItemsList.get(Sounds.RAINFOREST).setItemPlaying(true);
-                CommonFragment.soundItemsList.get(Sounds.RAINFOREST).setItemSelected(true);
-                supportMethod();
+                supportMethod(soundPool, Sounds.RAINFOREST, sampleId);
             } else if (sampleId == Sounds.soundIdList[Sounds.RIVER]) {
-                CommonFragment.soundItemsList.get(Sounds.RIVER).setItemLoaded(true);
-                Sounds.streamIdList[Sounds.RIVER] = soundPool.play(sampleId, 1, 1, 0, -1, 1);
-                CommonFragment.soundItemsList.get(Sounds.RIVER).setItemPlaying(true);
-                CommonFragment.soundItemsList.get(Sounds.RIVER).setItemSelected(true);
-                supportMethod();
+                supportMethod(soundPool, Sounds.RIVER, sampleId);
             } else if (sampleId == Sounds.soundIdList[Sounds.SEA]) {
-                CommonFragment.soundItemsList.get(Sounds.SEA).setItemLoaded(true);
-                Sounds.streamIdList[Sounds.SEA] = soundPool.play(sampleId, 1, 1, 0, -1, 1);
-                CommonFragment.soundItemsList.get(Sounds.SEA).setItemPlaying(true);
-                CommonFragment.soundItemsList.get(Sounds.SEA).setItemSelected(true);
-                supportMethod();
+                supportMethod(soundPool, Sounds.SEA, sampleId);
             } else if (sampleId == Sounds.soundIdList[Sounds.THUNDER]) {
-                CommonFragment.soundItemsList.get(Sounds.THUNDER).setItemLoaded(true);
-                Sounds.streamIdList[Sounds.THUNDER] = soundPool.play(sampleId, 1, 1, 0, -1, 1);
-                CommonFragment.soundItemsList.get(Sounds.THUNDER).setItemPlaying(true);
-                CommonFragment.soundItemsList.get(Sounds.THUNDER).setItemSelected(true);
-                supportMethod();
+                supportMethod(soundPool, Sounds.THUNDER, sampleId);
             } else if (sampleId == Sounds.soundIdList[Sounds.WATERFALL]) {
-                CommonFragment.soundItemsList.get(Sounds.WATERFALL).setItemLoaded(true);
-                Sounds.streamIdList[Sounds.WATERFALL] = soundPool.play(sampleId, 1, 1, 0, -1, 1);
-                CommonFragment.soundItemsList.get(Sounds.WATERFALL).setItemPlaying(true);
-                CommonFragment.soundItemsList.get(Sounds.WATERFALL).setItemSelected(true);
-                supportMethod();
+                supportMethod(soundPool, Sounds.WATERFALL, sampleId);
             } else if (sampleId == Sounds.soundIdList[Sounds.WIND]) {
-                CommonFragment.soundItemsList.get(Sounds.WIND).setItemLoaded(true);
-                CommonFragment.soundItemsList.get(Sounds.WIND).setItemSelected(true);
-                Sounds.streamIdList[Sounds.WIND] = soundPool.play(sampleId, 1, 1, 0, -1, 1);
-                CommonFragment.soundItemsList.get(Sounds.WIND).setItemPlaying(true);
-                supportMethod();
+                supportMethod(soundPool, Sounds.WIND, sampleId);
             } else {
                 Log.v(TAG, "sound id did not match");
             }
         }
     }
 
-    void supportMethod() {
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if (PreferenceUtilities.KEY_SOUNDS_SELECTED_COUNTER.equals(key)) {
+            updateBadgeNumber();
+        } else if (PreferenceUtilities.KEY_SOUNDS_PLAYING_COUNTER.equals(key)) {
+            updatePlaybackBtn();
+        }
+    }
+
+    void supportMethod(SoundPool soundPool, int idToSkip, int sampleId) {
+        SoundItem soundItem = CommonFragment.soundItemsList.get(idToSkip);
+        soundItem.setItemLoaded(true);
+        soundItem.setItemSelected(true);
+        Sounds.streamIdList[Sounds.WIND] = soundPool.play(sampleId, 1, 1, 0, -1, 1);
+        soundItem.setItemPlaying(true);
+
         PreferenceUtilities.incrementSoundsSelectedCount(this);
         PreferenceUtilities.incrementSoundsPlayingCount(this);
-        menuItemPlay.setTitle("Pause");
-        menuItemPlay.setIcon(R.drawable.ic_pause);
         Sounds.allPaused = false;
         for (int i = Sounds.BELLS; i <= Sounds.WIND; i++) {
+            if (i == idToSkip) {
+                continue;
+            }
             if (CommonFragment.soundItemsList.get(i).isItemSelected()) {
-                Sounds.soundPool.resume(Sounds.streamIdList[i]);
+                MainActivity.playerService.resumeAudio(Sounds.streamIdList[i]);
                 CommonFragment.soundItemsList.get(i).setItemPlaying(true);
                 PreferenceUtilities.incrementSoundsPlayingCount(this);
             }
         }
         CommonFragment.soundListAdapter.notifyDataSetChanged();
         MainActivity.selectedAudioAdapter.notifyDataSetChanged();
+    }
+
+    //COMPLETED 4) create method to update playback button of bottom nav by checking sharedPref
+    public void updatePlaybackBtn() {
+        if (PreferenceUtilities.getSoundsPlayingCount(this) > 0) {
+            menuItemPlay.setTitle(R.string.pause);
+            menuItemPlay.setIcon(R.drawable.ic_pause);
+        } else {
+            menuItemPlay.setTitle(R.string.play);
+            menuItemPlay.setIcon(R.drawable.ic_play);
+        }
+    }
+
+    // Setting Badge for BottomNavigationView's Selection MenuItem
+    void setUpBadge() {
+        int selectionMenuItemId = bottomNavigationView.getMenu().getItem(2).getItemId();
+        audioPlayingCountBadge = bottomNavigationView.getOrCreateBadge(selectionMenuItemId);
+        audioPlayingCountBadge.setBadgeTextColor(getResources().getColor(R.color.colorAccent));
+        audioPlayingCountBadge.setBackgroundColor(getResources().getColor(R.color.colorTitle));
+        audioPlayingCountBadge.setVisible(false);
     }
 
     public void updateBadgeNumber() {
@@ -442,10 +433,14 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
         }
     }
 
+    private void setListenerForSoundPool() {
+        MainActivity.playerService.getPlayer().setOnLoadCompleteListener(this);
+    }
+
     void stopAll() {
         for (int i = Sounds.BELLS; i <= Sounds.WIND; i++) {
             if (CommonFragment.soundItemsList.get(i).isItemSelected()) {
-                Sounds.soundPool.stop(Sounds.streamIdList[i]);
+                MainActivity.playerService.stopAudio(Sounds.streamIdList[i]);
                 CommonFragment.soundItemsList.get(i).setItemPlaying(false);
                 CommonFragment.soundItemsList.get(i).setItemSelected(false);
                 PreferenceUtilities.decrementSoundsPlayingCount(this);
@@ -453,8 +448,10 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
                 Sounds.selectedSoundsList.remove(CommonFragment.soundItemsList.get(i));
             }
         }
-        MainActivity.menuItemPlay.setTitle(R.string.play);
-        MainActivity.menuItemPlay.setIcon(R.drawable.ic_play);
+        if (isBind) {
+            unbindService(serviceConnection);
+            isBind = false;
+        }
         CommonFragment.soundListAdapter.notifyDataSetChanged();
         MainActivity.selectedAudioAdapter.notifyDataSetChanged();
     }
@@ -492,19 +489,12 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
         mTimerRunning = true;
     }
 
-    void setUpBadge() {
-        // Setting Badge for BottomNavigationView's Selection MenuItem
-        int selectionMenuItemId = bottomNavigationView.getMenu().getItem(2).getItemId();
-        audioPlayingCountBadge = bottomNavigationView.getOrCreateBadge(selectionMenuItemId);
-        audioPlayingCountBadge.setBadgeTextColor(getResources().getColor(R.color.colorAccent));
-        audioPlayingCountBadge.setBackgroundColor(getResources().getColor(R.color.colorTitle));
-        audioPlayingCountBadge.setVisible(false);
-    }
-
-    @Override
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        if (PreferenceUtilities.KEY_SOUNDS_SELECTED_COUNTER.equals(key)) {
-            updateBadgeNumber();
+    void startServiceIfNotAlready() {
+        if (!PreferenceUtilities.isServiceAvailable(this)) {
+            Intent intent = new Intent(this, PlayerService.class);
+            startService(intent);
+            PreferenceUtilities.setServiceAvailability(this, true);
         }
     }
+
 }

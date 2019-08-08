@@ -66,21 +66,23 @@ public class CommonFragment extends Fragment {
 
     private void getListData(int tabPosition) {
         if (tabPosition == 0) {
-            soundItemsList.add(new SoundItem("bells", R.raw.bells_tibetan));
-            soundItemsList.add(new SoundItem("bird", R.raw.bird_song));
-            soundItemsList.add(new SoundItem("clock chimes", R.raw.clock_chimes));
-            soundItemsList.add(new SoundItem("farm", R.raw.farm));
-            soundItemsList.add(new SoundItem("fire", R.raw.fire_burning));
-            soundItemsList.add(new SoundItem("flute", R.raw.flute_tone));
-            soundItemsList.add(new SoundItem("music box", R.raw.music_box));
-            soundItemsList.add(new SoundItem("night", R.raw.nightime));
-            soundItemsList.add(new SoundItem("rain", R.raw.rain));
-            soundItemsList.add(new SoundItem("rainforest", R.raw.rainforest_ambience));
-            soundItemsList.add(new SoundItem("river", R.raw.river));
-            soundItemsList.add(new SoundItem("sea", R.raw.sea_waves));
-            soundItemsList.add(new SoundItem("thunder", R.raw.thunder_hd));
-            soundItemsList.add(new SoundItem("waterfall", R.raw.waterfall_large));
-            soundItemsList.add(new SoundItem("wind", R.raw.wind));
+            if (soundItemsList.size() <= 0) {
+                soundItemsList.add(new SoundItem("bells", R.raw.bells_tibetan));
+                soundItemsList.add(new SoundItem("bird", R.raw.bird_song));
+                soundItemsList.add(new SoundItem("clock chimes", R.raw.clock_chimes));
+                soundItemsList.add(new SoundItem("farm", R.raw.farm));
+                soundItemsList.add(new SoundItem("fire", R.raw.fire_burning));
+                soundItemsList.add(new SoundItem("flute", R.raw.flute_tone));
+                soundItemsList.add(new SoundItem("music box", R.raw.music_box));
+                soundItemsList.add(new SoundItem("night", R.raw.nightime));
+                soundItemsList.add(new SoundItem("rain", R.raw.rain));
+                soundItemsList.add(new SoundItem("rainforest", R.raw.rainforest_ambience));
+                soundItemsList.add(new SoundItem("river", R.raw.river));
+                soundItemsList.add(new SoundItem("sea", R.raw.sea_waves));
+                soundItemsList.add(new SoundItem("thunder", R.raw.thunder_hd));
+                soundItemsList.add(new SoundItem("waterfall", R.raw.waterfall_large));
+                soundItemsList.add(new SoundItem("wind", R.raw.wind));
+            }
         } else if (tabPosition == 1) {
             briefExercisesList.add(new MeditationExercise("Three minute breathing"
                     , "Peter Morgan, Free Mindfulness", R.raw.free_mind_fulness_3minute_breathing));

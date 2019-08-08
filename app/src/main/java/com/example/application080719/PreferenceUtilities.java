@@ -6,10 +6,17 @@ import android.preference.PreferenceManager;
 
 public class PreferenceUtilities {
 
-    public static final String KEY_SOUNDS_PLAYING_COUNTER = "sounds-playing-count";
-    public static final String KEY_SOUNDS_SELECTED_COUNTER = "sounds-selected-count";
+    static final String KEY_SOUNDS_PLAYING_COUNTER = "sounds-playing-count";
+    static final String KEY_SOUNDS_SELECTED_COUNTER = "sounds-selected-count";
+    private static final String KEY_SERVICE_EXISTS = "service-exists";
 
     private static final int DEFAULT_COUNT = 0;
+    //TODO 2) Create SharedPreference for soundIdList
+    //TODO 3) Create SharedPreference for streamIdList
+
+    //TODO 5) create sharedPref for loadedItems list
+    //TODO 6) create sharedPref for selectedItems list
+    //TODO 7) create sharedPref for playingItems list
 
     synchronized public static void decrementSoundsPlayingCount(Context context) {
         int soundsPlayingCount = PreferenceUtilities.getSoundsPlayingCount(context);
@@ -46,6 +53,19 @@ public class PreferenceUtilities {
 
         SharedPreferences.Editor editor = prefs.edit();
         editor.putInt(key, value);
+        editor.apply();
+    }
+
+    static boolean isServiceAvailable(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getBoolean(KEY_SERVICE_EXISTS, false);
+    }
+
+    static void setServiceAvailability(Context context, boolean value) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putBoolean(KEY_SERVICE_EXISTS, value);
         editor.apply();
     }
 }
