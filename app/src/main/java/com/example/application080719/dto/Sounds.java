@@ -1,4 +1,4 @@
-package com.example.application080719;
+package com.example.application080719.dto;
 
 import java.util.ArrayList;
 

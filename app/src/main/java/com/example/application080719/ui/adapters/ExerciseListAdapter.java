@@ -1,4 +1,4 @@
-package com.example.application080719.ui;
+package com.example.application080719.ui.adapters;
 
 import android.content.Context;
 import android.graphics.Typeface;
@@ -10,8 +10,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.application080719.MeditationExercise;
 import com.example.application080719.R;
+import com.example.application080719.dto.MeditationExercise;
 
 import java.util.ArrayList;
 
@@ -28,7 +28,8 @@ public class ExerciseListAdapter extends RecyclerView.Adapter<ExerciseListAdapte
     @NonNull
     @Override
     public ExerciseViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View mItemView = LayoutInflater.from(mContext).inflate(R.layout.exercise_list_item, parent, false);
+        View mItemView = LayoutInflater.from(mContext).inflate(R.layout.exercise_list_item, parent
+                , false);
         return new ExerciseViewHolder(mItemView);
     }
 

@@ -1,16 +1,15 @@
-package com.example.application080719;
+package com.example.application080719.ui.main;
 
 import android.app.TimePickerDialog;
-import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.media.SoundPool;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.session.MediaControllerCompat;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -26,11 +25,15 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.viewpager.widget.ViewPager;
 
-import com.example.application080719.ui.SelectedAudioAdapter;
-import com.example.application080719.ui.main.CommonFragment;
-import com.example.application080719.ui.main.SectionsPagerAdapter;
+import com.example.application080719.MediaBrowserHelper;
+import com.example.application080719.PlayerService;
+import com.example.application080719.PreferenceUtilities;
+import com.example.application080719.R;
+import com.example.application080719.dto.Sounds;
+import com.example.application080719.ui.adapters.SelectedAudioAdapter;
 import com.google.android.material.badge.BadgeDrawable;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.bottomnavigation.LabelVisibilityMode;
@@ -38,15 +41,16 @@ import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.tabs.TabLayout;
 
 import java.util.Calendar;
+import java.util.List;
 import java.util.Locale;
 
-public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadCompleteListener
-        , SharedPreferences.OnSharedPreferenceChangeListener {
+public class MainActivity extends AppCompatActivity
+        implements SharedPreferences.OnSharedPreferenceChangeListener {
 
     final String TAG = MainActivity.class.getSimpleName();
     BottomNavigationView bottomNavigationView;
     public MenuItem menuItemPlay;
-    static BadgeDrawable audioPlayingCountBadge;
+    static BadgeDrawable audioSelectedCountBadge, audioPlayingCountBadge;
     public static SelectedAudioAdapter selectedAudioAdapter;
 
     BottomSheetDialog timerBottomSheetDialog;
@@ -56,27 +60,34 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
     TextView countDownTV;
     Button stopCountDownBtn;
     CountDownTimer countDownTimer;
-    boolean mTimerRunning, isBind;
+    boolean mTimerRunning;
     long timeLeftInMillis;
     public static PlayerService playerService;
 
+    private MediaBrowserHelper mMediaBrowserHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Log.v(TAG, "onCreate called...");
 
-        SectionsPagerAdapter sectionsPagerAdapter = new SectionsPagerAdapter(this, getSupportFragmentManager());
+        SectionsPagerAdapter sectionsPagerAdapter = new SectionsPagerAdapter(this
+                , getSupportFragmentManager());
         ViewPager viewPager = findViewById(R.id.view_pager);
         viewPager.setAdapter(sectionsPagerAdapter);
 
         TabLayout tabs = findViewById(R.id.tabs);
         tabs.setupWithViewPager(viewPager);
 
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        toolbar.setTitle(R.string.app_name);
+
         bottomNavigationView = findViewById(R.id.bottom_nav);
 
         setUpBadge();
-        updateBadgeNumber();
+        updateSelectionBadgeNumber();
+        updatePlayingBadgeNumber();
 
         // Setting label visibility type for BottomNavigationView
         bottomNavigationView.setLabelVisibilityMode(LabelVisibilityMode.LABEL_VISIBILITY_LABELED);
@@ -88,40 +99,21 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         prefs.registerOnSharedPreferenceChangeListener(this);
 
+        mMediaBrowserHelper = new MediaBrowserConnection(this);
     }
-
-    ServiceConnection serviceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            Log.v(TAG, "OnServiceConnected called.");
-            // get the local service instance
-            PlayerService.LocalService localService = (PlayerService.LocalService) service;
-            playerService = localService.getService();
-            setListenerForSoundPool();
-            isBind = true;
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            Log.v(TAG, "onServiceDisconnected called.");
-            playerService = null;
-            isBind = false;
-        }
-    };
 
     //COMPLETED start and bind with service on activity start if service not exists
     //COMPLETED bind with service on activity start if service already exists
     @Override
     protected void onStart() {
         super.onStart();
-
-        // Initialize SoundPool Object.
-        startServiceIfNotAlready();
-        isBind = bindService(new Intent(this, PlayerService.class), serviceConnection, 0);
+        Log.v(TAG, "onStart called...");
+        mMediaBrowserHelper.onStart();
 
         // ***** Selection MenuItem of BottomNavigationView *****
         selectionBottomSheetDialog = new BottomSheetDialog(this);
-        View selectionSheetView = getLayoutInflater().inflate(R.layout.selection_bottom_sheet, null);
+        View selectionSheetView = getLayoutInflater().inflate(R.layout.selection_bottom_sheet
+                , null);
 
         selectionBottomSheetDialog.setContentView(selectionSheetView);
         selectionBottomSheetDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
@@ -132,7 +124,8 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
 
         });
 
-        ImageButton selectionSheetCloseBtn = selectionSheetView.findViewById(R.id.selection_sheet_close_btn);
+        ImageButton selectionSheetCloseBtn = selectionSheetView
+                .findViewById(R.id.selection_sheet_close_btn);
         selectionSheetCloseBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -175,7 +168,8 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
         Spinner spinner = timerSheetView.findViewById(R.id.spinner);
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
+            public void onItemSelected(AdapterView<?> adapterView, View view, int position
+                    , long id) {
                 if (position == 1) {
                     timeLeftInMillis = 15 * 60 * 1000;
                     startTimer();
@@ -224,9 +218,11 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
                 Calendar calendar = Calendar.getInstance();
                 int currentHour = calendar.get(Calendar.HOUR_OF_DAY);
                 int currentMinutes = calendar.get(Calendar.MINUTE);
-                TimePickerDialog timePickerDialog = new TimePickerDialog(MainActivity.this, new TimePickerDialog.OnTimeSetListener() {
+                TimePickerDialog timePickerDialog = new TimePickerDialog(MainActivity.this
+                        , new TimePickerDialog.OnTimeSetListener() {
                     @Override
-                    public void onTimeSet(TimePicker timePicker, int selectedHour, int selectedMinute) {
+                    public void onTimeSet(TimePicker timePicker, int selectedHour
+                            , int selectedMinute) {
                         if (selectedHour >= currentHour) {
                             int timerHour;
                             int timerMinutes;
@@ -238,7 +234,9 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
                                 if (selectedHour - currentHour > 1) {
                                     timerHour = (selectedHour - currentHour) - 1;
                                 } else if (selectedHour - currentHour < 1) {
-                                    Toast.makeText(MainActivity.this, "Please select valid time.", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(MainActivity.this
+                                            , "Please select valid time."
+                                            , Toast.LENGTH_SHORT).show();
                                     return;
                                 } else {
                                     timerHour = (selectedHour - currentHour) - 1;
@@ -248,7 +246,9 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
                                 if (selectedMinute == currentMinutes) {
                                     timerMinutes = 60;
                                     if (selectedHour - currentHour == 0) {
-                                        Toast.makeText(MainActivity.this, "Please select valid time.", Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(MainActivity.this
+                                                , "Please select valid time."
+                                                , Toast.LENGTH_SHORT).show();
                                         return;
                                     }
                                 }
@@ -257,7 +257,8 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
                             startTimer();
                             showCountDownLayout();
                         } else {
-                            Toast.makeText(MainActivity.this, "Please select valid time.", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this
+                                    , "Please select valid time.", Toast.LENGTH_SHORT).show();
                         }
                     }
                 }, currentHour, currentMinutes, false);
@@ -265,52 +266,62 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
             }
         });
 
-        bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
-            @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
-                if (menuItem.getItemId() == R.id.action_play) {
-                    String menuTitle = menuItem.getTitle().toString();
-                    if (getString(R.string.play).equals(menuTitle)) {
-                        if (PreferenceUtilities.getSoundsSelectedCount(MainActivity.this) > 0) {
-                            for (int i = Sounds.BELLS; i <= Sounds.WIND; i++) {
-                                if (CommonFragment.soundItemsList.get(i).isItemSelected()) {
-                                    CommonFragment.soundItemsList.get(i).setItemPlaying(true);
-                                    MainActivity.playerService.resumeAudio(Sounds.streamIdList[i]);
-                                    PreferenceUtilities.incrementSoundsPlayingCount(MainActivity.this);
+        bottomNavigationView.setOnNavigationItemSelectedListener(
+                new BottomNavigationView.OnNavigationItemSelectedListener() {
+                    @Override
+                    public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+                        if (menuItem.getItemId() == R.id.action_play) {
+                            String menuTitle = menuItem.getTitle().toString();
+                            if (getString(R.string.play).equals(menuTitle)) {
+                                if (PreferenceUtilities.getSoundsSelectedCount(
+                                        MainActivity.this) > 0) {
+                                    for (int i = Sounds.BELLS; i <= Sounds.WIND; i++) {
+                                        if (CommonFragment.soundItemsList.get(i).isItemSelected()) {
+                                            CommonFragment.soundItemsList.get(i).setItemPlaying(true);
+                                            MainActivity.playerService.resumeAudio(Sounds.streamIdList[i]);
+                                            PreferenceUtilities.incrementSoundsPlayingCount(
+                                                    MainActivity.this);
+                                        }
+                                    }
+//                                    menuItem.setTitle(R.string.pause);
+//                                    menuItem.setIcon(R.drawable.ic_pause);
+                                    Sounds.allPaused = false;
+                                } else
+                                    Toast.makeText(MainActivity.this
+                                            , "Select some sounds first.", Toast.LENGTH_SHORT).show();
+                            } else {
+                                for (int i = Sounds.BELLS; i <= Sounds.WIND; i++) {
+                                    if (CommonFragment.soundItemsList.get(i).isItemPlaying()) {
+                                        CommonFragment.soundItemsList.get(i).setItemPlaying(false);
+                                        MainActivity.playerService.pauseAudio(Sounds.streamIdList[i]);
+                                        PreferenceUtilities.decrementSoundsPlayingCount(
+                                                MainActivity.this);
+                                    }
                                 }
+                                Sounds.allPaused = true;
                             }
-                            menuItem.setTitle(R.string.pause);
-                            menuItem.setIcon(R.drawable.ic_pause);
-                            Sounds.allPaused = false;
-                        } else
-                            Toast.makeText(MainActivity.this, "Select some sounds first.", Toast.LENGTH_SHORT).show();
-                    } else {
-                        MainActivity.playerService.getPlayer().autoPause();
-                        menuItem.setTitle(R.string.play);
-                        menuItem.setIcon(R.drawable.ic_play);
-                        for (int i = Sounds.BELLS; i <= Sounds.WIND; i++) {
-                            if (CommonFragment.soundItemsList.get(i).isItemPlaying()) {
-                                CommonFragment.soundItemsList.get(i).setItemPlaying(false);
-                                PreferenceUtilities.decrementSoundsPlayingCount(MainActivity.this);
-                            }
+                            CommonFragment.soundListAdapter.notifyDataSetChanged();
+                        } else if (menuItem.getItemId() == R.id.action_selecction) {
+                            if (PreferenceUtilities.getSoundsSelectedCount(MainActivity.this) > 0) {
+                                MainActivity.selectedAudioAdapter.notifyDataSetChanged();
+                                selectionBottomSheetDialog.show();
+                            } else
+                                Toast.makeText(MainActivity.this, "Select some sounds first."
+                                        , Toast.LENGTH_SHORT).show();
+                        } else if (menuItem.getItemId() == R.id.action_timer) {
+                            timerBottomSheetDialog.show();
                         }
-                        Sounds.allPaused = true;
+                        return true;
                     }
-                    CommonFragment.soundListAdapter.notifyDataSetChanged();
-                } else if (menuItem.getItemId() == R.id.action_selecction) {
-                    if (PreferenceUtilities.getSoundsSelectedCount(MainActivity.this) > 0) {
-                        MainActivity.selectedAudioAdapter.notifyDataSetChanged();
-                        selectionBottomSheetDialog.show();
-                    } else
-                        Toast.makeText(MainActivity.this, "Select some sounds first.", Toast.LENGTH_SHORT).show();
-                } else if (menuItem.getItemId() == R.id.action_timer) {
-                    timerBottomSheetDialog.show();
-                }
-                return true;
-            }
-        });
+                });
+    }
 
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Log.v(TAG, "onStop called...");
+        mMediaBrowserHelper.onStop();
     }
 
     //COMPLETED stop and unbind service on activity destroy if no sound is selected
@@ -320,11 +331,9 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
 
         super.onDestroy();
 
-        if (PreferenceUtilities.getSoundsSelectedCount(this) == 0) {
-            if (isBind)
-                unbindService(serviceConnection);
-            stopService(new Intent(this, PlayerService.class));
-        }
+//        if (PreferenceUtilities.getSoundsSelectedCount(this) == 0) {
+//            stopService(new Intent(this, PlayerService.class));
+//        }
 
         /** Cleanup the shared preference listener **/
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -332,75 +341,13 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
     }
 
     @Override
-    public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
-        if (status == 0) {
-            if (sampleId == Sounds.soundIdList[Sounds.BELLS]) {
-                supportMethod(soundPool, Sounds.BELLS, sampleId);
-            } else if (sampleId == Sounds.soundIdList[Sounds.BIRD]) {
-                supportMethod(soundPool, Sounds.BIRD, sampleId);
-            } else if (sampleId == Sounds.soundIdList[Sounds.CLOCK_CHIMES]) {
-                supportMethod(soundPool, Sounds.CLOCK_CHIMES, sampleId);
-            } else if (sampleId == Sounds.soundIdList[Sounds.FARM]) {
-                supportMethod(soundPool, Sounds.FARM, sampleId);
-            } else if (sampleId == Sounds.soundIdList[Sounds.FIRE]) {
-                supportMethod(soundPool, Sounds.FIRE, sampleId);
-            } else if (sampleId == Sounds.soundIdList[Sounds.FLUTE]) {
-                supportMethod(soundPool, Sounds.FLUTE, sampleId);
-            } else if (sampleId == Sounds.soundIdList[Sounds.MUSIC_BOX]) {
-                supportMethod(soundPool, Sounds.MUSIC_BOX, sampleId);
-            } else if (sampleId == Sounds.soundIdList[Sounds.NIGHT]) {
-                supportMethod(soundPool, Sounds.NIGHT, sampleId);
-            } else if (sampleId == Sounds.soundIdList[Sounds.RAIN]) {
-                supportMethod(soundPool, Sounds.RAIN, sampleId);
-            } else if (sampleId == Sounds.soundIdList[Sounds.RAINFOREST]) {
-                supportMethod(soundPool, Sounds.RAINFOREST, sampleId);
-            } else if (sampleId == Sounds.soundIdList[Sounds.RIVER]) {
-                supportMethod(soundPool, Sounds.RIVER, sampleId);
-            } else if (sampleId == Sounds.soundIdList[Sounds.SEA]) {
-                supportMethod(soundPool, Sounds.SEA, sampleId);
-            } else if (sampleId == Sounds.soundIdList[Sounds.THUNDER]) {
-                supportMethod(soundPool, Sounds.THUNDER, sampleId);
-            } else if (sampleId == Sounds.soundIdList[Sounds.WATERFALL]) {
-                supportMethod(soundPool, Sounds.WATERFALL, sampleId);
-            } else if (sampleId == Sounds.soundIdList[Sounds.WIND]) {
-                supportMethod(soundPool, Sounds.WIND, sampleId);
-            } else {
-                Log.v(TAG, "sound id did not match");
-            }
-        }
-    }
-
-    @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         if (PreferenceUtilities.KEY_SOUNDS_SELECTED_COUNTER.equals(key)) {
-            updateBadgeNumber();
+            updateSelectionBadgeNumber();
         } else if (PreferenceUtilities.KEY_SOUNDS_PLAYING_COUNTER.equals(key)) {
             updatePlaybackBtn();
+            updatePlayingBadgeNumber();
         }
-    }
-
-    void supportMethod(SoundPool soundPool, int idToSkip, int sampleId) {
-        SoundItem soundItem = CommonFragment.soundItemsList.get(idToSkip);
-        soundItem.setItemLoaded(true);
-        soundItem.setItemSelected(true);
-        Sounds.streamIdList[Sounds.WIND] = soundPool.play(sampleId, 1, 1, 0, -1, 1);
-        soundItem.setItemPlaying(true);
-
-        PreferenceUtilities.incrementSoundsSelectedCount(this);
-        PreferenceUtilities.incrementSoundsPlayingCount(this);
-        Sounds.allPaused = false;
-        for (int i = Sounds.BELLS; i <= Sounds.WIND; i++) {
-            if (i == idToSkip) {
-                continue;
-            }
-            if (CommonFragment.soundItemsList.get(i).isItemSelected()) {
-                MainActivity.playerService.resumeAudio(Sounds.streamIdList[i]);
-                CommonFragment.soundItemsList.get(i).setItemPlaying(true);
-                PreferenceUtilities.incrementSoundsPlayingCount(this);
-            }
-        }
-        CommonFragment.soundListAdapter.notifyDataSetChanged();
-        MainActivity.selectedAudioAdapter.notifyDataSetChanged();
     }
 
     //COMPLETED 4) create method to update playback button of bottom nav by checking sharedPref
@@ -417,24 +364,76 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
     // Setting Badge for BottomNavigationView's Selection MenuItem
     void setUpBadge() {
         int selectionMenuItemId = bottomNavigationView.getMenu().getItem(2).getItemId();
-        audioPlayingCountBadge = bottomNavigationView.getOrCreateBadge(selectionMenuItemId);
+        audioSelectedCountBadge = bottomNavigationView.getOrCreateBadge(selectionMenuItemId);
+        audioSelectedCountBadge.setBadgeTextColor(getResources().getColor(R.color.colorAccent));
+        audioSelectedCountBadge.setBackgroundColor(getResources().getColor(R.color.colorTitle));
+        audioSelectedCountBadge.setVisible(false);
+
+        int playbackMenuItemId = bottomNavigationView.getMenu().getItem(0).getItemId();
+        audioPlayingCountBadge = bottomNavigationView.getOrCreateBadge(playbackMenuItemId);
         audioPlayingCountBadge.setBadgeTextColor(getResources().getColor(R.color.colorAccent));
         audioPlayingCountBadge.setBackgroundColor(getResources().getColor(R.color.colorTitle));
         audioPlayingCountBadge.setVisible(false);
     }
 
-    public void updateBadgeNumber() {
+    public void updateSelectionBadgeNumber() {
         int selectedSoundsCount = PreferenceUtilities.getSoundsSelectedCount(MainActivity.this);
-        audioPlayingCountBadge.setNumber(selectedSoundsCount);
+        audioSelectedCountBadge.setNumber(selectedSoundsCount);
         if (selectedSoundsCount > 0) {
-            audioPlayingCountBadge.setVisible(true);
+            audioSelectedCountBadge.setVisible(true);
         } else {
-            audioPlayingCountBadge.setVisible(false);
+            audioSelectedCountBadge.setVisible(false);
         }
     }
 
-    private void setListenerForSoundPool() {
-        MainActivity.playerService.getPlayer().setOnLoadCompleteListener(this);
+    public void updatePlayingBadgeNumber() {
+        int playingSoundsCount = PreferenceUtilities.getSoundsPlayingCount(MainActivity.this);
+        audioPlayingCountBadge.setNumber(playingSoundsCount);
+//        if (playingSoundsCount > 0) {
+            audioPlayingCountBadge.setVisible(true);
+//        } else {
+//            audioPlayingCountBadge.setVisible(false);
+//        }
+    }
+
+    /**
+     * Customize the connection to our {@link androidx.media.MediaBrowserServiceCompat}
+     * and implement our app specific desires.
+     */
+    private class MediaBrowserConnection extends MediaBrowserHelper {
+        private MediaBrowserConnection(Context context) {
+            super(context, PlayerService.class);
+        }
+
+        @Override
+        protected void onConnected(@NonNull MediaControllerCompat mediaController) {
+            Log.d(TAG, " MediaBrowserConnection: onConnected called "
+                    + MainActivity.playerService);
+        }
+
+        @Override
+        protected void onServiceReceived(@NonNull PlayerService playerService) {
+            MainActivity.playerService = playerService;
+            Log.d(TAG, " MediaBrowserConnection: onServiceReceived called "
+                    + MainActivity.playerService);
+        }
+
+        @Override
+        protected void onChildrenLoaded(@NonNull String parentId,
+                                        @NonNull List<MediaBrowserCompat.MediaItem> children) {
+            Log.d(TAG, " MediaBrowserConnection: onChildrenLoaded called ");
+            super.onChildrenLoaded(parentId, children);
+
+            final MediaControllerCompat mediaController = getMediaController();
+
+            // Queue up all media items for this simple sample.
+            for (final MediaBrowserCompat.MediaItem mediaItem : children) {
+                mediaController.addQueueItem(mediaItem.getDescription());
+            }
+
+            // Call prepare now so pressing play just works.
+            mediaController.getTransportControls().prepare();
+        }
     }
 
     void stopAll() {
@@ -447,10 +446,6 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
                 PreferenceUtilities.decrementSoundsSelectedCount(this);
                 Sounds.selectedSoundsList.remove(CommonFragment.soundItemsList.get(i));
             }
-        }
-        if (isBind) {
-            unbindService(serviceConnection);
-            isBind = false;
         }
         CommonFragment.soundListAdapter.notifyDataSetChanged();
         MainActivity.selectedAudioAdapter.notifyDataSetChanged();
@@ -474,27 +469,21 @@ public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadC
                 int minutes = (int) (timeLeftInMillis / 1000) / 60;
                 int seconds = (int) (timeLeftInMillis / 1000) % 60;
 
-                String timeLeftFormatted = String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds);
+                String timeLeftFormatted = String.format(Locale.getDefault(), "%02d:%02d"
+                        , minutes, seconds);
                 countDownTV.setText(timeLeftFormatted);
             }
 
             @Override
             public void onFinish() {
-                Toast.makeText(MainActivity.this, "Timer End !", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Timer End !", Toast.LENGTH_SHORT)
+                        .show();
                 stopAll();
                 showSetTimerLayout();
                 timerBottomSheetDialog.dismiss();
             }
         }.start();
         mTimerRunning = true;
-    }
-
-    void startServiceIfNotAlready() {
-        if (!PreferenceUtilities.isServiceAvailable(this)) {
-            Intent intent = new Intent(this, PlayerService.class);
-            startService(intent);
-            PreferenceUtilities.setServiceAvailability(this, true);
-        }
     }
 
 }

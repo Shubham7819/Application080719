@@ -10,9 +10,14 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Build;
+import android.support.v4.media.session.MediaSessionCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 
+import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
-import androidx.core.content.ContextCompat;
+import androidx.media.session.MediaButtonReceiver;
+
+import com.example.application080719.ui.main.MainActivity;
 
 public class NotificationUtils {
 
@@ -21,7 +26,7 @@ public class NotificationUtils {
      * can be handy when we need to cancel the notification, or perhaps update it. This number is
      * arbitrary and can be set to whatever you like. 1138 is in no way significant.
      */
-    private static final int PLAYER_NOTIFICATION_ID = 1138;
+    public static final int PLAYER_NOTIFICATION_ID = 1138;
     /**
      * This pending intent id is used to uniquely reference the pending intent
      */
@@ -31,11 +36,47 @@ public class NotificationUtils {
      */
     private static final String PLAYER_NOTIFICATION_CHANNEL_ID = "player_notification_channel";
 
-    // This method will create a notification
-    static Notification createNotification(Context context) {
+    private final PlayerService mService;
 
-        NotificationManager notificationManager = (NotificationManager)
-                context.getSystemService(Context.NOTIFICATION_SERVICE);
+    private final NotificationCompat.Action mPlayAction;
+    private final NotificationCompat.Action mPauseAction;
+    private final NotificationManager mNotificationManager;
+
+    public NotificationUtils(PlayerService service) {
+        mService = service;
+
+        mNotificationManager =
+                (NotificationManager) mService.getSystemService(Context.NOTIFICATION_SERVICE);
+
+        mPlayAction =
+                new NotificationCompat.Action(
+                        R.drawable.ic_play,
+                        mService.getString(R.string.play),
+                        MediaButtonReceiver.buildMediaButtonPendingIntent(
+                                mService,
+                                PlaybackStateCompat.ACTION_PLAY));
+        mPauseAction =
+                new NotificationCompat.Action(
+                        R.drawable.ic_pause,
+                        mService.getString(R.string.pause),
+                        MediaButtonReceiver.buildMediaButtonPendingIntent(
+                                mService,
+                                PlaybackStateCompat.ACTION_PAUSE));
+
+        // Cancel all notifications to handle the case where the Service was killed and
+        // restarted by the system.
+        mNotificationManager.cancelAll();
+    }
+
+    public NotificationManager getNotificationManager() {
+        return mNotificationManager;
+    }
+
+    // This method will create a notification
+    public Notification getNotification(@NonNull PlaybackStateCompat state,
+                                        MediaSessionCompat.Token token) {
+
+        boolean isPlaying = state.getState() == PlaybackStateCompat.STATE_PLAYING;
 
         // Create a notification channel for Android O devices
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -43,18 +84,27 @@ public class NotificationUtils {
                     PLAYER_NOTIFICATION_CHANNEL_ID,
                     "Primary",
                     NotificationManager.IMPORTANCE_DEFAULT);
-            notificationManager.createNotificationChannel(mChannel);
+            mNotificationManager.createNotificationChannel(mChannel);
         }
 
-        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context, PLAYER_NOTIFICATION_CHANNEL_ID)
-                .setColor(ContextCompat.getColor(context, R.color.colorPrimary))
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mService
+                , PLAYER_NOTIFICATION_CHANNEL_ID)
+                .setStyle(
+                        new androidx.media.app.NotificationCompat.MediaStyle()
+                                .setMediaSession(token)
+                                .setShowActionsInCompactView(0)
+                                // For backwards compatibility with Android L and earlier.
+                                .setShowCancelButton(true)
+                                .setCancelButtonIntent(
+                                        MediaButtonReceiver.buildMediaButtonPendingIntent(
+                                                mService,
+                                                PlaybackStateCompat.ACTION_STOP)))
                 .setSmallIcon(R.drawable.ic_audio)
-                .setLargeIcon(largeIcon(context))
+                .setLargeIcon(largeIcon())
                 .setContentTitle("Meditation Sounds Running")
                 .setContentText("Click to open app")
-                .setStyle(new NotificationCompat.BigTextStyle().bigText(
-                        "Click to open app"))
-                .setContentIntent(contentIntent(context))
+                .setContentIntent(contentIntent())
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setAutoCancel(false);
 
         // If the build version is greater than or equal to JELLY_BEAN and less than OREO,
@@ -62,6 +112,10 @@ public class NotificationUtils {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN
                 && Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             notificationBuilder.setPriority(NotificationCompat.PRIORITY_HIGH);
+        }
+
+        if (state.getActions() != 0) {
+            notificationBuilder.addAction(isPlaying ? mPauseAction : mPlayAction);
         }
 
         // Trigger the notification by calling notify on the NotificationManager.
@@ -72,18 +126,18 @@ public class NotificationUtils {
 
     // This method will create the pending intent which will trigger when
     // the notification is pressed. This pending intent should open up the MainActivity.
-    private static PendingIntent contentIntent(Context context) {
-        Intent startActivityIntent = new Intent(context, MainActivity.class);
+    private PendingIntent contentIntent() {
+        Intent startActivityIntent = new Intent(mService, MainActivity.class);
         return PendingIntent.getActivity(
-                context,
+                mService,
                 PLAYER_PENDING_INTENT_ID,
                 startActivityIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     // This method is necessary to decode a bitmap needed for the notification.
-    private static Bitmap largeIcon(Context context) {
-        Resources res = context.getResources();
+    private Bitmap largeIcon() {
+        Resources res = mService.getResources();
         return BitmapFactory.decodeResource(res, R.drawable.ic_launcher_foreground);
     }
 }

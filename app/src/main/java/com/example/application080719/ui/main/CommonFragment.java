@@ -12,11 +12,11 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
-import com.example.application080719.MeditationExercise;
+import com.example.application080719.dto.MeditationExercise;
 import com.example.application080719.R;
-import com.example.application080719.SoundItem;
-import com.example.application080719.ui.ExerciseListAdapter;
-import com.example.application080719.ui.SoundListAdapter;
+import com.example.application080719.dto.SoundItem;
+import com.example.application080719.ui.adapters.ExerciseListAdapter;
+import com.example.application080719.ui.adapters.SoundListAdapter;
 
 import java.util.ArrayList;
 

@@ -1,4 +1,4 @@
-package com.example.application080719.ui;
+package com.example.application080719.ui.adapters;
 
 import android.app.Activity;
 import android.content.Context;
@@ -9,11 +9,11 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.example.application080719.MainActivity;
 import com.example.application080719.PreferenceUtilities;
 import com.example.application080719.R;
-import com.example.application080719.SoundItem;
-import com.example.application080719.Sounds;
+import com.example.application080719.dto.SoundItem;
+import com.example.application080719.dto.Sounds;
+import com.example.application080719.ui.main.MainActivity;
 
 import java.util.ArrayList;
 

@@ -6,8 +6,8 @@ import android.preference.PreferenceManager;
 
 public class PreferenceUtilities {
 
-    static final String KEY_SOUNDS_PLAYING_COUNTER = "sounds-playing-count";
-    static final String KEY_SOUNDS_SELECTED_COUNTER = "sounds-selected-count";
+    public static final String KEY_SOUNDS_PLAYING_COUNTER = "sounds-playing-count";
+    public static final String KEY_SOUNDS_SELECTED_COUNTER = "sounds-selected-count";
     private static final String KEY_SERVICE_EXISTS = "service-exists";
 
     private static final int DEFAULT_COUNT = 0;
@@ -56,12 +56,12 @@ public class PreferenceUtilities {
         editor.apply();
     }
 
-    static boolean isServiceAvailable(Context context) {
+    public static boolean isServiceAvailable(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         return prefs.getBoolean(KEY_SERVICE_EXISTS, false);
     }
 
-    static void setServiceAvailability(Context context, boolean value) {
+    public static void setServiceAvailability(Context context, boolean value) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
         SharedPreferences.Editor editor = prefs.edit();
