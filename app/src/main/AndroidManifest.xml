@@ -23,6 +23,16 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".ui.main.MeditationActivity"
+            android:parentActivityName=".ui.main.MainActivity"></activity>
+
+        <receiver android:name="androidx.media.session.MediaButtonReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
+            </intent-filter>
+        </receiver>
+
         <service
             android:name=".PlayerService"
             android:enabled="true"
@@ -31,6 +41,7 @@
                 <action android:name="android.media.browse.MediaBrowserService" />
             </intent-filter>
         </service>
+
     </application>
 
 </manifest>

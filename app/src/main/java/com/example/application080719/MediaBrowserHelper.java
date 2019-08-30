@@ -32,7 +32,7 @@ public class MediaBrowserHelper {
 
     private final MediaBrowserConnectionCallback mMediaBrowserConnectionCallback;
     private final MediaControllerCallback mMediaControllerCallback;
-    private final MediaBrowserSubscriptionCallback mMediaBrowserSubscriptionCallback;
+//    private final MediaBrowserSubscriptionCallback mMediaBrowserSubscriptionCallback;
 
     private MediaBrowserCompat mMediaBrowser;
 
@@ -47,7 +47,7 @@ public class MediaBrowserHelper {
 
         mMediaBrowserConnectionCallback = new MediaBrowserConnectionCallback();
         mMediaControllerCallback = new MediaControllerCallback();
-        mMediaBrowserSubscriptionCallback = new MediaBrowserSubscriptionCallback();
+//        mMediaBrowserSubscriptionCallback = new MediaBrowserSubscriptionCallback();
     }
 
     public void onStart() {
@@ -64,6 +64,9 @@ public class MediaBrowserHelper {
     }
 
     public void onStop() {
+        if (PreferenceUtilities.getSoundsPlayingCount(mContext) < 1) {
+            getTransportControls().stop();
+        }
         if (mMediaController != null) {
             mMediaController.unregisterCallback(mMediaControllerCallback);
             mMediaController = null;
@@ -87,15 +90,15 @@ public class MediaBrowserHelper {
     protected void onConnected(@NonNull MediaControllerCompat mediaController) {
     }
 
-    /**
-     * Called after loading a browsable {@link MediaBrowserCompat.MediaItem}
-     *
-     * @param parentId The media ID of the parent item.
-     * @param children List (possibly empty) of child items.
-     */
-    protected void onChildrenLoaded(@NonNull String parentId,
-                                    @NonNull List<MediaBrowserCompat.MediaItem> children) {
-    }
+//    /**
+//     * Called after loading a browsable {@link MediaBrowserCompat.MediaItem}
+//     *
+//     * @param parentId The media ID of the parent item.
+//     * @param children List (possibly empty) of child items.
+//     */
+//    protected void onChildrenLoaded(@NonNull String parentId,
+//                                    @NonNull List<MediaBrowserCompat.MediaItem> children) {
+//    }
 
     protected void onServiceReceived(@NonNull PlayerService playerService) {
     }
@@ -136,6 +139,33 @@ public class MediaBrowserHelper {
         return mMediaController.getTransportControls();
     }
 
+    public void registerCallback(MediaControllerCompat.Callback callback) {
+        if (callback != null) {
+            mCallbackList.add(callback);
+
+            // Update with the latest metadata/playback state.
+            if (mMediaController != null) {
+                final MediaMetadataCompat metadata = mMediaController.getMetadata();
+                if (metadata != null) {
+                    callback.onMetadataChanged(metadata);
+                }
+
+                final PlaybackStateCompat playbackState = mMediaController.getPlaybackState();
+                if (playbackState != null) {
+                    callback.onPlaybackStateChanged(playbackState);
+                }
+            }
+        }
+    }
+
+    public void pauseAll() {
+        mMediaController.sendCommand("pauseAll", null, resultReceiver);
+    }
+
+    public void resumeAll() {
+        mMediaController.sendCommand("resumeAll", null, resultReceiver);
+    }
+
     private void performOnAllCallbacks(@NonNull CallbackCommand command) {
         for (MediaControllerCompat.Callback callback : mCallbackList) {
             if (callback != null) {
@@ -153,7 +183,6 @@ public class MediaBrowserHelper {
                 Log.d(TAG, " local Service: " + localService.getService());
                 MediaBrowserHelper.this.onServiceReceived(localService.getService());
             }
-            super.onReceiveResult(resultCode, resultData);
         }
     };
 
@@ -191,20 +220,20 @@ public class MediaBrowserHelper {
                 throw new RuntimeException(e);
             }
 
-            mMediaBrowser.subscribe(mMediaBrowser.getRoot(), mMediaBrowserSubscriptionCallback);
+//            mMediaBrowser.subscribe(mMediaBrowser.getRoot(), mMediaBrowserSubscriptionCallback);
         }
     }
 
     // Receives callbacks from the MediaBrowser when the MediaBrowserService has loaded new media
     // that is ready for playback.
-    public class MediaBrowserSubscriptionCallback extends MediaBrowserCompat.SubscriptionCallback {
-
-        @Override
-        public void onChildrenLoaded(@NonNull String parentId,
-                                     @NonNull List<MediaBrowserCompat.MediaItem> children) {
-            MediaBrowserHelper.this.onChildrenLoaded(parentId, children);
-        }
-    }
+//    public class MediaBrowserSubscriptionCallback extends MediaBrowserCompat.SubscriptionCallback {
+//
+//        @Override
+//        public void onChildrenLoaded(@NonNull String parentId,
+//                                     @NonNull List<MediaBrowserCompat.MediaItem> children) {
+//            MediaBrowserHelper.this.onChildrenLoaded(parentId, children);
+//        }
+//    }
 
     // Receives callbacks from the MediaController and updates the UI state,
     // i.e.: Which is the current item, whether it's playing or paused, etc.

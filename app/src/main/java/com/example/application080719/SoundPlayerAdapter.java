@@ -24,7 +24,6 @@ public final class SoundPlayerAdapter extends PlayerAdapter {
         Log.v(TAG, "constructor called");
         mContext = context.getApplicationContext();
         mPlaybackInfoListener = listener;
-        initializeMediaPlayer();
     }
 
     private void initializeMediaPlayer() {
@@ -79,6 +78,7 @@ public final class SoundPlayerAdapter extends PlayerAdapter {
     @Override
     public int loadAudio(Context context, int audioResourceId) {
         Log.v(TAG, "loadAudio called");
+        initializeMediaPlayer();
         return mSoundPool.load(context, audioResourceId, 1);
     }
 
@@ -90,7 +90,7 @@ public final class SoundPlayerAdapter extends PlayerAdapter {
 
     @Override
     public int playAudio(int soundId) {
-        Log.v(TAG, "pauseAudio called");
+        Log.v(TAG, "playAudio called");
         setNewState(PlaybackStateCompat.STATE_PLAYING);
         return mSoundPool.play(soundId, 1, 1, 0, -1, 1);
     }
@@ -130,22 +130,47 @@ public final class SoundPlayerAdapter extends PlayerAdapter {
     @Override
     protected void onPause() {
         Log.v(TAG, "onPause called");
-        mSoundPool.autoPause();
+        for (int i = Sounds.BELLS; i <= Sounds.WIND; i++) {
+            if (CommonFragment.soundItemsList.get(i).isItemPlaying()) {
+                CommonFragment.soundItemsList.get(i).setItemPlaying(false);
+                MainActivity.playerService.pauseAudio(Sounds.streamIdList[i]);
+                PreferenceUtilities.decrementSoundsPlayingCount(mContext);
+            }
+        }
+        Sounds.allPaused = true;
         setNewState(PlaybackStateCompat.STATE_PAUSED);
     }
 
     @Override
     protected void onResume() {
         Log.v(TAG, "onResume called");
-        mSoundPool.autoResume();
+        for (int i = Sounds.BELLS; i <= Sounds.WIND; i++) {
+            if (CommonFragment.soundItemsList.get(i).isItemSelected() &&
+                    (!CommonFragment.soundItemsList.get(i).isItemPlaying())) {
+                CommonFragment.soundItemsList.get(i).setItemPlaying(true);
+                MainActivity.playerService.resumeAudio(Sounds.streamIdList[i]);
+                PreferenceUtilities.incrementSoundsPlayingCount(mContext);
+            }
+        }
+        Sounds.allPaused = false;
         setNewState(PlaybackStateCompat.STATE_PLAYING);
     }
 
     @Override
     public void onStop() {
         Log.v(TAG, "onStop called");
-        for (int i = 0; i < 15; i++)
-            mSoundPool.stop(Sounds.streamIdList[i]);
+        for (int i = Sounds.BELLS; i <= Sounds.WIND; i++) {
+            if (CommonFragment.soundItemsList.get(i).isItemSelected()) {
+                stopAudio(Sounds.streamIdList[i]);
+                if (CommonFragment.soundItemsList.get(i).isItemPlaying())
+                    PreferenceUtilities.decrementSoundsPlayingCount(mContext);
+                PreferenceUtilities.decrementSoundsSelectedCount(mContext);
+                CommonFragment.soundItemsList.get(i).setItemPlaying(false);
+                CommonFragment.soundItemsList.get(i).setItemSelected(false);
+                CommonFragment.soundItemsList.get(i).setItemLoaded(false);
+                Sounds.selectedSoundsList.remove(CommonFragment.soundItemsList.get(i));
+            }
+        }
         setNewState(PlaybackStateCompat.STATE_STOPPED);
         release();
     }
@@ -165,10 +190,10 @@ public final class SoundPlayerAdapter extends PlayerAdapter {
     @PlaybackStateCompat.Actions
     private long getAvailableActions() {
         Log.v(TAG, "getAvailableActions called");
-        long actions = 0l;
+        long actions = 0L;
         switch (mState) {
             case PlaybackStateCompat.STATE_STOPPED:
-                actions |= 0l;
+                actions |= 0L;
                 break;
             case PlaybackStateCompat.STATE_PLAYING:
                 actions |= PlaybackStateCompat.ACTION_STOP

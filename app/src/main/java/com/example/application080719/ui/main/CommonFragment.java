@@ -1,6 +1,5 @@
 package com.example.application080719.ui.main;
 
-
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,17 +11,14 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
-import com.example.application080719.dto.MeditationExercise;
 import com.example.application080719.R;
+import com.example.application080719.dto.MeditationExercise;
 import com.example.application080719.dto.SoundItem;
 import com.example.application080719.ui.adapters.ExerciseListAdapter;
 import com.example.application080719.ui.adapters.SoundListAdapter;
 
 import java.util.ArrayList;
 
-/**
- * A simple {@link Fragment} subclass.
- */
 public class CommonFragment extends Fragment {
 
     private ArrayList<MeditationExercise> briefExercisesList = new ArrayList<>();
@@ -34,10 +30,8 @@ public class CommonFragment extends Fragment {
         // Required empty public constructor
     }
 
-
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-
         if (getArguments() != null) {
             tabPosition = getArguments().getInt(null, 0);
         }
@@ -60,7 +54,6 @@ public class CommonFragment extends Fragment {
             ExerciseListAdapter adapter = new ExerciseListAdapter(getActivity(), briefExercisesList);
             recyclerView.setAdapter(adapter);
         }
-
         return root;
     }
 

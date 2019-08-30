@@ -4,12 +4,11 @@ import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
-import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.preference.PreferenceManager;
-import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.session.MediaControllerCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -33,6 +32,7 @@ import com.example.application080719.PlayerService;
 import com.example.application080719.PreferenceUtilities;
 import com.example.application080719.R;
 import com.example.application080719.dto.Sounds;
+import com.example.application080719.ui.adapters.SectionsPagerAdapter;
 import com.example.application080719.ui.adapters.SelectedAudioAdapter;
 import com.google.android.material.badge.BadgeDrawable;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -41,7 +41,6 @@ import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.tabs.TabLayout;
 
 import java.util.Calendar;
-import java.util.List;
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity
@@ -50,7 +49,7 @@ public class MainActivity extends AppCompatActivity
     final String TAG = MainActivity.class.getSimpleName();
     BottomNavigationView bottomNavigationView;
     public MenuItem menuItemPlay;
-    static BadgeDrawable audioSelectedCountBadge, audioPlayingCountBadge;
+    static BadgeDrawable audioSelectedCountBadge;
     public static SelectedAudioAdapter selectedAudioAdapter;
 
     BottomSheetDialog timerBottomSheetDialog;
@@ -87,7 +86,6 @@ public class MainActivity extends AppCompatActivity
 
         setUpBadge();
         updateSelectionBadgeNumber();
-        updatePlayingBadgeNumber();
 
         // Setting label visibility type for BottomNavigationView
         bottomNavigationView.setLabelVisibilityMode(LabelVisibilityMode.LABEL_VISIBILITY_LABELED);
@@ -100,10 +98,9 @@ public class MainActivity extends AppCompatActivity
         prefs.registerOnSharedPreferenceChangeListener(this);
 
         mMediaBrowserHelper = new MediaBrowserConnection(this);
+        mMediaBrowserHelper.registerCallback(new MediaBrowserListener());
     }
 
-    //COMPLETED start and bind with service on activity start if service not exists
-    //COMPLETED bind with service on activity start if service already exists
     @Override
     protected void onStart() {
         super.onStart();
@@ -275,30 +272,12 @@ public class MainActivity extends AppCompatActivity
                             if (getString(R.string.play).equals(menuTitle)) {
                                 if (PreferenceUtilities.getSoundsSelectedCount(
                                         MainActivity.this) > 0) {
-                                    for (int i = Sounds.BELLS; i <= Sounds.WIND; i++) {
-                                        if (CommonFragment.soundItemsList.get(i).isItemSelected()) {
-                                            CommonFragment.soundItemsList.get(i).setItemPlaying(true);
-                                            MainActivity.playerService.resumeAudio(Sounds.streamIdList[i]);
-                                            PreferenceUtilities.incrementSoundsPlayingCount(
-                                                    MainActivity.this);
-                                        }
-                                    }
-//                                    menuItem.setTitle(R.string.pause);
-//                                    menuItem.setIcon(R.drawable.ic_pause);
-                                    Sounds.allPaused = false;
+                                    mMediaBrowserHelper.resumeAll();
                                 } else
                                     Toast.makeText(MainActivity.this
                                             , "Select some sounds first.", Toast.LENGTH_SHORT).show();
                             } else {
-                                for (int i = Sounds.BELLS; i <= Sounds.WIND; i++) {
-                                    if (CommonFragment.soundItemsList.get(i).isItemPlaying()) {
-                                        CommonFragment.soundItemsList.get(i).setItemPlaying(false);
-                                        MainActivity.playerService.pauseAudio(Sounds.streamIdList[i]);
-                                        PreferenceUtilities.decrementSoundsPlayingCount(
-                                                MainActivity.this);
-                                    }
-                                }
-                                Sounds.allPaused = true;
+                                mMediaBrowserHelper.pauseAll();
                             }
                             CommonFragment.soundListAdapter.notifyDataSetChanged();
                         } else if (menuItem.getItemId() == R.id.action_selecction) {
@@ -316,7 +295,6 @@ public class MainActivity extends AppCompatActivity
                 });
     }
 
-
     @Override
     protected void onStop() {
         super.onStop();
@@ -324,16 +302,11 @@ public class MainActivity extends AppCompatActivity
         mMediaBrowserHelper.onStop();
     }
 
-    //COMPLETED stop and unbind service on activity destroy if no sound is selected
     @Override
     protected void onDestroy() {
         Log.v(TAG, "onDestroy called...");
 
         super.onDestroy();
-
-//        if (PreferenceUtilities.getSoundsSelectedCount(this) == 0) {
-//            stopService(new Intent(this, PlayerService.class));
-//        }
 
         /** Cleanup the shared preference listener **/
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -346,11 +319,10 @@ public class MainActivity extends AppCompatActivity
             updateSelectionBadgeNumber();
         } else if (PreferenceUtilities.KEY_SOUNDS_PLAYING_COUNTER.equals(key)) {
             updatePlaybackBtn();
-            updatePlayingBadgeNumber();
         }
     }
 
-    //COMPLETED 4) create method to update playback button of bottom nav by checking sharedPref
+    // updates playback button of bottom nav by checking sharedPref
     public void updatePlaybackBtn() {
         if (PreferenceUtilities.getSoundsPlayingCount(this) > 0) {
             menuItemPlay.setTitle(R.string.pause);
@@ -368,12 +340,6 @@ public class MainActivity extends AppCompatActivity
         audioSelectedCountBadge.setBadgeTextColor(getResources().getColor(R.color.colorAccent));
         audioSelectedCountBadge.setBackgroundColor(getResources().getColor(R.color.colorTitle));
         audioSelectedCountBadge.setVisible(false);
-
-        int playbackMenuItemId = bottomNavigationView.getMenu().getItem(0).getItemId();
-        audioPlayingCountBadge = bottomNavigationView.getOrCreateBadge(playbackMenuItemId);
-        audioPlayingCountBadge.setBadgeTextColor(getResources().getColor(R.color.colorAccent));
-        audioPlayingCountBadge.setBackgroundColor(getResources().getColor(R.color.colorTitle));
-        audioPlayingCountBadge.setVisible(false);
     }
 
     public void updateSelectionBadgeNumber() {
@@ -384,16 +350,6 @@ public class MainActivity extends AppCompatActivity
         } else {
             audioSelectedCountBadge.setVisible(false);
         }
-    }
-
-    public void updatePlayingBadgeNumber() {
-        int playingSoundsCount = PreferenceUtilities.getSoundsPlayingCount(MainActivity.this);
-        audioPlayingCountBadge.setNumber(playingSoundsCount);
-//        if (playingSoundsCount > 0) {
-            audioPlayingCountBadge.setVisible(true);
-//        } else {
-//            audioPlayingCountBadge.setVisible(false);
-//        }
     }
 
     /**
@@ -418,35 +374,68 @@ public class MainActivity extends AppCompatActivity
                     + MainActivity.playerService);
         }
 
+//        @Override
+//        protected void onChildrenLoaded(@NonNull String parentId,
+//                                        @NonNull List<MediaBrowserCompat.MediaItem> children) {
+//            Log.d(TAG, " MediaBrowserConnection: onChildrenLoaded called ");
+//            super.onChildrenLoaded(parentId, children);
+//
+//            final MediaControllerCompat mediaController = getMediaController();
+//
+//            // Queue up all media items for this simple sample.
+//            for (final MediaBrowserCompat.MediaItem mediaItem : children) {
+//                mediaController.addQueueItem(mediaItem.getDescription());
+//            }
+//
+//            // Call prepare now so pressing play just works.
+//            mediaController.getTransportControls().prepare();
+//        }
+    }
+
+    /**
+     * Implementation of the {@link MediaControllerCompat.Callback} methods we're interested in.
+     * <p>
+     * Here would also be where one could override
+     * {@code onQueueChanged(List<MediaSessionCompat.QueueItem> queue)} to get informed when items
+     * are added or removed from the queue. We don't do this here in order to keep the UI
+     * simple.
+     */
+    private class MediaBrowserListener extends MediaControllerCompat.Callback {
         @Override
-        protected void onChildrenLoaded(@NonNull String parentId,
-                                        @NonNull List<MediaBrowserCompat.MediaItem> children) {
-            Log.d(TAG, " MediaBrowserConnection: onChildrenLoaded called ");
-            super.onChildrenLoaded(parentId, children);
-
-            final MediaControllerCompat mediaController = getMediaController();
-
-            // Queue up all media items for this simple sample.
-            for (final MediaBrowserCompat.MediaItem mediaItem : children) {
-                mediaController.addQueueItem(mediaItem.getDescription());
-            }
-
-            // Call prepare now so pressing play just works.
-            mediaController.getTransportControls().prepare();
+        public void onPlaybackStateChanged(PlaybackStateCompat playbackState) {
+//            mIsPlaying = playbackState != null &&
+//                    playbackState.getState() == PlaybackStateCompat.STATE_PLAYING;
+//            mMediaControlsImage.setPressed(mIsPlaying);
+            CommonFragment.soundListAdapter.notifyDataSetChanged();
         }
+
+//        @Override
+//        public void onMetadataChanged(MediaMetadataCompat mediaMetadata) {
+//            if (mediaMetadata == null) {
+//                return;
+//            }
+//            mTitleTextView.setText(
+//                    mediaMetadata.getString(MediaMetadataCompat.METADATA_KEY_TITLE));
+//            mArtistTextView.setText(
+//                    mediaMetadata.getString(MediaMetadataCompat.METADATA_KEY_ARTIST));
+//            mAlbumArt.setImageBitmap(MusicLibrary.getAlbumBitmap(
+//                    MainActivity.this,
+//                    mediaMetadata.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID)));
+//        }
+
+//        @Override
+//        public void onSessionDestroyed() {
+//            super.onSessionDestroyed();
+//        }
+
+//        @Override
+//        public void onQueueChanged(List<MediaSessionCompat.QueueItem> queue) {
+//            super.onQueueChanged(queue);
+//        }
     }
 
     void stopAll() {
-        for (int i = Sounds.BELLS; i <= Sounds.WIND; i++) {
-            if (CommonFragment.soundItemsList.get(i).isItemSelected()) {
-                MainActivity.playerService.stopAudio(Sounds.streamIdList[i]);
-                CommonFragment.soundItemsList.get(i).setItemPlaying(false);
-                CommonFragment.soundItemsList.get(i).setItemSelected(false);
-                PreferenceUtilities.decrementSoundsPlayingCount(this);
-                PreferenceUtilities.decrementSoundsSelectedCount(this);
-                Sounds.selectedSoundsList.remove(CommonFragment.soundItemsList.get(i));
-            }
-        }
+        mMediaBrowserHelper.getTransportControls().stop();
         CommonFragment.soundListAdapter.notifyDataSetChanged();
         MainActivity.selectedAudioAdapter.notifyDataSetChanged();
     }

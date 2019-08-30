@@ -77,15 +77,7 @@ public class SoundListAdapter extends RecyclerView.Adapter<SoundListAdapter.Soun
                         Sounds.selectedSoundsList.remove(currentItem);
                         MainActivity.selectedAudioAdapter.notifyDataSetChanged();
                         if (PreferenceUtilities.getSoundsSelectedCount(mContext) > 0) {
-                            //TODO ii) replace loop with resumeAll() method
-                            for (int i = Sounds.BELLS; i <= Sounds.WIND; i++) {
-                                if (CommonFragment.soundItemsList.get(i).isItemSelected() &&
-                                        (!CommonFragment.soundItemsList.get(i).isItemPlaying())) {
-                                    MainActivity.playerService.resumeAudio(Sounds.streamIdList[i]);
-                                    CommonFragment.soundItemsList.get(i).setItemPlaying(true);
-                                    PreferenceUtilities.incrementSoundsPlayingCount(mContext);
-                                }
-                            }
+                            resumeAll();
                         }
 
                     } else {
@@ -227,8 +219,8 @@ public class SoundListAdapter extends RecyclerView.Adapter<SoundListAdapter.Soun
         for (int i = Sounds.BELLS; i <= Sounds.WIND; i++) {
             if (CommonFragment.soundItemsList.get(i).isItemSelected() &&
                     (!CommonFragment.soundItemsList.get(i).isItemPlaying())) {
+                MainActivity.playerService.resumeAudio(Sounds.streamIdList[i]);
                 CommonFragment.soundItemsList.get(i).setItemPlaying(true);
-                MainActivity.playerService.resumeAudio(streamIdList[i]);
                 PreferenceUtilities.incrementSoundsPlayingCount(mContext);
             }
         }

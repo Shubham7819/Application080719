@@ -1,4 +1,4 @@
-package com.example.application080719.ui.main;
+package com.example.application080719.ui.adapters;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -10,6 +10,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 
 import com.example.application080719.R;
+import com.example.application080719.ui.main.CommonFragment;
 
 /**
  * A [FragmentPagerAdapter] that returns a fragment corresponding to

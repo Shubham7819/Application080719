@@ -21,7 +21,7 @@ import com.example.application080719.ui.main.MainActivity;
 
 public class NotificationUtils {
 
-    /*
+    /**
      * This notification ID can be used to access our notification after we've displayed it. This
      * can be handy when we need to cancel the notification, or perhaps update it. This number is
      * arbitrary and can be set to whatever you like. 1138 is in no way significant.
@@ -105,6 +105,7 @@ public class NotificationUtils {
                 .setContentText("Click to open app")
                 .setContentIntent(contentIntent())
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .setOnlyAlertOnce(true)
                 .setAutoCancel(false);
 
         // If the build version is greater than or equal to JELLY_BEAN and less than OREO,

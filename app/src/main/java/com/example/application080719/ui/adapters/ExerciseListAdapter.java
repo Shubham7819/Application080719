@@ -1,7 +1,7 @@
 package com.example.application080719.ui.adapters;
 
 import android.content.Context;
-import android.graphics.Typeface;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,11 +12,15 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.application080719.R;
 import com.example.application080719.dto.MeditationExercise;
+import com.example.application080719.ui.main.MeditationActivity;
 
 import java.util.ArrayList;
 
 public class ExerciseListAdapter extends RecyclerView.Adapter<ExerciseListAdapter.ExerciseViewHolder> {
 
+    public static final String EXERCISE_NAME = "exercise name";
+    public static final String EXERCISE_GUIDES = "exercise guides";
+    public static final String EXERCISE_RESOURCE_ID = "exercise resource id";
     private Context mContext;
     private ArrayList<MeditationExercise> mExercisesList;
 
@@ -41,8 +45,11 @@ public class ExerciseListAdapter extends RecyclerView.Adapter<ExerciseListAdapte
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                holder.titleTV.setTypeface(null, Typeface.BOLD);
-                holder.guidesTV.setTypeface(null, Typeface.BOLD);
+                Intent i = new Intent(mContext, MeditationActivity.class);
+                i.putExtra(EXERCISE_NAME, currentExercise.getExerciseTitle());
+                i.putExtra(EXERCISE_GUIDES, currentExercise.getExerciseGuides());
+                i.putExtra(EXERCISE_RESOURCE_ID, currentExercise.getExerciseAudioResourceId());
+                mContext.startActivity(i);
             }
         });
     }

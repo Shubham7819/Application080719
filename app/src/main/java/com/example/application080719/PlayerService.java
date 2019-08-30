@@ -127,10 +127,16 @@ public class PlayerService extends MediaBrowserServiceCompat {
         @Override
         public void onCommand(String command, Bundle extras, ResultReceiver cb) {
             Log.v(LOG_TAG, " MediaSessionCallback: onCommand called");
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                Bundle result = new Bundle();
-                result.putBinder("key", mBinder);
-                cb.send(0, result);
+            if (command.equals("getService")) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                    Bundle result = new Bundle();
+                    result.putBinder("key", mBinder);
+                    cb.send(25, result);
+                }
+            } else if (command.equals("pauseAll")) {
+                onPause();
+            } else if (command.equals("resumeAll")) {
+                onPlay();
             }
         }
 
