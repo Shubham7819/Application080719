@@ -2,6 +2,7 @@ package com.example.application080719;
 
 import android.content.Context;
 import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.media.SoundPool;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
@@ -16,6 +17,7 @@ public final class SoundPlayerAdapter extends PlayerAdapter {
     private final String TAG = SoundPlayerAdapter.class.getSimpleName();
     private final Context mContext;
     private SoundPool mSoundPool;
+    private MediaPlayer mMediaPlayer;
     private PlaybackInfoListener mPlaybackInfoListener;
     private int mState;
 
@@ -26,10 +28,10 @@ public final class SoundPlayerAdapter extends PlayerAdapter {
         mPlaybackInfoListener = listener;
     }
 
-    private void initializeMediaPlayer() {
-        Log.v(TAG, "initializeMediaPlayer called");
+    private void initializeSoundPool() {
+        Log.v(TAG, "initializeSoundPool called");
         if (mSoundPool == null) {
-            mSoundPool = new SoundPool(15, AudioManager.STREAM_MUSIC, 0);
+            mSoundPool = new SoundPool(16, AudioManager.STREAM_MUSIC, 0);
             mSoundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
                 @Override
                 public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
@@ -74,11 +76,25 @@ public final class SoundPlayerAdapter extends PlayerAdapter {
         }
     }
 
+    private void initializeMediaPlayer() {
+        if (mMediaPlayer == null) {
+            mMediaPlayer = new MediaPlayer();
+            mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                @Override
+                public void onCompletion(MediaPlayer mediaPlayer) {
+                    mPlaybackInfoListener.onPlaybackCompleted();
+
+//                    setNewState(PlaybackStateCompat.STATE_PAUSED);
+                }
+            });
+        }
+    }
+
     // Implements PlaybackControl.
     @Override
     public int loadAudio(Context context, int audioResourceId) {
         Log.v(TAG, "loadAudio called");
-        initializeMediaPlayer();
+        initializeSoundPool();
         return mSoundPool.load(context, audioResourceId, 1);
     }
 
@@ -133,7 +149,7 @@ public final class SoundPlayerAdapter extends PlayerAdapter {
         for (int i = Sounds.BELLS; i <= Sounds.WIND; i++) {
             if (CommonFragment.soundItemsList.get(i).isItemPlaying()) {
                 CommonFragment.soundItemsList.get(i).setItemPlaying(false);
-                MainActivity.playerService.pauseAudio(Sounds.streamIdList[i]);
+                pauseAudio(Sounds.streamIdList[i]);
                 PreferenceUtilities.decrementSoundsPlayingCount(mContext);
             }
         }
@@ -148,7 +164,7 @@ public final class SoundPlayerAdapter extends PlayerAdapter {
             if (CommonFragment.soundItemsList.get(i).isItemSelected() &&
                     (!CommonFragment.soundItemsList.get(i).isItemPlaying())) {
                 CommonFragment.soundItemsList.get(i).setItemPlaying(true);
-                MainActivity.playerService.resumeAudio(Sounds.streamIdList[i]);
+                resumeAudio(Sounds.streamIdList[i]);
                 PreferenceUtilities.incrementSoundsPlayingCount(mContext);
             }
         }
@@ -237,7 +253,7 @@ public final class SoundPlayerAdapter extends PlayerAdapter {
             }
             if (CommonFragment.soundItemsList.get(i).isItemSelected() &&
                     (!CommonFragment.soundItemsList.get(i).isItemPlaying())) {
-                MainActivity.playerService.resumeAudio(Sounds.streamIdList[i]);
+                resumeAudio(Sounds.streamIdList[i]);
                 CommonFragment.soundItemsList.get(i).setItemPlaying(true);
                 PreferenceUtilities.incrementSoundsPlayingCount(mContext);
             }
@@ -245,4 +261,5 @@ public final class SoundPlayerAdapter extends PlayerAdapter {
         CommonFragment.soundListAdapter.notifyDataSetChanged();
         MainActivity.selectedAudioAdapter.notifyDataSetChanged();
     }
+
 }

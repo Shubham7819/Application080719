@@ -145,11 +145,6 @@ public class MediaBrowserHelper {
 
             // Update with the latest metadata/playback state.
             if (mMediaController != null) {
-                final MediaMetadataCompat metadata = mMediaController.getMetadata();
-                if (metadata != null) {
-                    callback.onMetadataChanged(metadata);
-                }
-
                 final PlaybackStateCompat playbackState = mMediaController.getPlaybackState();
                 if (playbackState != null) {
                     callback.onPlaybackStateChanged(playbackState);
@@ -219,9 +214,8 @@ public class MediaBrowserHelper {
                 Log.d(TAG, String.format("onConnected: Problem: %s", e.toString()));
                 throw new RuntimeException(e);
             }
-
-//            mMediaBrowser.subscribe(mMediaBrowser.getRoot(), mMediaBrowserSubscriptionCallback);
         }
+
     }
 
     // Receives callbacks from the MediaBrowser when the MediaBrowserService has loaded new media

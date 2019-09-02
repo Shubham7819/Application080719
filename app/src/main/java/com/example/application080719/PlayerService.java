@@ -141,6 +141,11 @@ public class PlayerService extends MediaBrowserServiceCompat {
         }
 
         @Override
+        public void onPlayFromMediaId(String mediaId, Bundle extras) {
+
+        }
+
+        @Override
         public void onPlay() {
             mPlayback.resume();
             Log.d(LOG_TAG, "MediaSessionCallback: onPlay called");

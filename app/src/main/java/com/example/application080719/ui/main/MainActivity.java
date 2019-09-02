@@ -144,6 +144,7 @@ public class MainActivity extends AppCompatActivity
         selectedAudioAdapter = new SelectedAudioAdapter(this, Sounds.selectedSoundsList);
         currentPlayingList.setAdapter(selectedAudioAdapter);
 
+        //TODO on returning back to activity after activity change timer UI disappears but countdown continues.
         // ***** Timer MenuItem of BottomNavigationView *****
         timerBottomSheetDialog = new BottomSheetDialog(this);
         View timerSheetView = getLayoutInflater().inflate(R.layout.timer_bottom_sheet, null);
@@ -410,28 +411,10 @@ public class MainActivity extends AppCompatActivity
         }
 
 //        @Override
-//        public void onMetadataChanged(MediaMetadataCompat mediaMetadata) {
-//            if (mediaMetadata == null) {
-//                return;
-//            }
-//            mTitleTextView.setText(
-//                    mediaMetadata.getString(MediaMetadataCompat.METADATA_KEY_TITLE));
-//            mArtistTextView.setText(
-//                    mediaMetadata.getString(MediaMetadataCompat.METADATA_KEY_ARTIST));
-//            mAlbumArt.setImageBitmap(MusicLibrary.getAlbumBitmap(
-//                    MainActivity.this,
-//                    mediaMetadata.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID)));
-//        }
-
-//        @Override
 //        public void onSessionDestroyed() {
 //            super.onSessionDestroyed();
 //        }
 
-//        @Override
-//        public void onQueueChanged(List<MediaSessionCompat.QueueItem> queue) {
-//            super.onQueueChanged(queue);
-//        }
     }
 
     void stopAll() {

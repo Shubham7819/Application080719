@@ -78,52 +78,72 @@ public class CommonFragment extends Fragment {
             }
         } else if (tabPosition == 1) {
             briefExercisesList.add(new MeditationExercise("Three minute breathing"
-                    , "Peter Morgan, Free Mindfulness", R.raw.free_mind_fulness_3minute_breathing));
+                    , "Peter Morgan, Free Mindfulness"
+                    , R.raw.three_minute_breathing_freemindfulness));
             briefExercisesList.add(new MeditationExercise("Five minute breathing"
-                    , "Mindful Awareness Research Centre, UCLA", R.raw.free_mind_fulness_3minute_breathing));
+                    , "Mindful Awareness Research Centre, UCLA"
+                    , R.raw.five_minute_breathing_marc));
             briefExercisesList.add(new MeditationExercise("Five minute breathing"
-                    , "Life Happens", R.raw.free_mind_fulness_3minute_breathing));
+                    , "Life Happens", R.raw.five_minute_breathing_lifehappens));
             briefExercisesList.add(new MeditationExercise("Six minute breath awareness"
-                    , "Melbourne Mindfulness Centre & Still Mind", R.raw.free_mind_fulness_3minute_breathing));
+                    , "Melbourne Mindfulness Centre & Still Mind"
+                    , R.raw.six_minute_breath_awareness_stillmind));
             briefExercisesList.add(new MeditationExercise("Ten minute breathing"
-                    , "Peter Morgan, Free Mindfulness", R.raw.free_mind_fulness_3minute_breathing));
+                    , "Peter Morgan, Free Mindfulness"
+                    , R.raw.ten_minute_breathing_freemindfulness));
             briefExercisesList.add(new MeditationExercise("Ten minute mindfulness of breathing"
-                    , "Padraig O'Morain", R.raw.free_mind_fulness_3minute_breathing));
+                    , "Padraig O'Morain"
+                    , R.raw.ten_minute_mindfulness_of_breathing_padraig));
         } else if (tabPosition == 2) {
             briefExercisesList.add(new MeditationExercise("Brief mindfulness practice"
                     , "Padraig O'Morain", R.raw.free_mind_fulness_3minute_breathing));
             briefExercisesList.add(new MeditationExercise("The breathing space"
-                    , "Vidyamala Burch, Breathworks", R.raw.free_mind_fulness_3minute_breathing));
+                    , "Vidyamala Burch, Breathworks"
+                    , R.raw.free_mind_fulness_3minute_breathing));
             briefExercisesList.add(new MeditationExercise("The tension release meditation"
-                    , " Vidyamala Burch, Breathworks", R.raw.free_mind_fulness_3minute_breathing));
+                    , " Vidyamala Burch, Breathworks"
+                    , R.raw.free_mind_fulness_3minute_breathing));
             briefExercisesList.add(new MeditationExercise("Three minute breathing space"
-                    , "Peter Morgan, Free Mindfulness", R.raw.free_mind_fulness_3minute_breathing));
+                    , "Peter Morgan, Free Mindfulness"
+                    , R.raw.free_mind_fulness_3minute_breathing));
             briefExercisesList.add(new MeditationExercise("Three minute mindfulness of sounds"
-                    , "Peter Morgan, Free Mindfulness", R.raw.free_mind_fulness_3minute_breathing));
+                    , "Peter Morgan, Free Mindfulness"
+                    , R.raw.free_mind_fulness_3minute_breathing));
         } else if (tabPosition == 3) {
             briefExercisesList.add(new MeditationExercise("Forty five minute body scan"
-                    , "UCSD Center for mindfulness", R.raw.free_mind_fulness_3minute_breathing));
+                    , "UCSD Center for mindfulness"
+                    , R.raw.free_mind_fulness_3minute_breathing));
             briefExercisesList.add(new MeditationExercise("Twenty minute body scan"
-                    , "UCSD Center for mindfulness", R.raw.free_mind_fulness_3minute_breathing));
+                    , "UCSD Center for mindfulness"
+                    , R.raw.free_mind_fulness_3minute_breathing));
             briefExercisesList.add(new MeditationExercise("Body scan"
-                    , "Kieran Fleck, Senior CBT Therapist", R.raw.free_mind_fulness_3minute_breathing));
+                    , "Kieran Fleck, Senior CBT Therapist"
+                    , R.raw.free_mind_fulness_3minute_breathing));
             briefExercisesList.add(new MeditationExercise("Four minute body scan"
-                    , "Melbourne Mindfulness Centre & Still Mind", R.raw.free_mind_fulness_3minute_breathing));
+                    , "Melbourne Mindfulness Centre & Still Mind"
+                    , R.raw.free_mind_fulness_3minute_breathing));
             briefExercisesList.add(new MeditationExercise("Body scan"
-                    , "Vidyamala Burch, Breathworks", R.raw.free_mind_fulness_3minute_breathing));
+                    , "Vidyamala Burch, Breathworks"
+                    , R.raw.free_mind_fulness_3minute_breathing));
         } else if (tabPosition == 4) {
             briefExercisesList.add(new MeditationExercise("Seated meditation"
-                    , "UCSD Center for mindfulness", R.raw.free_mind_fulness_3minute_breathing));
+                    , "UCSD Center for mindfulness"
+                    , R.raw.free_mind_fulness_3minute_breathing));
             briefExercisesList.add(new MeditationExercise("Sitting meditation"
-                    , "Kieran Fleck, Senior CBT Therapist", R.raw.free_mind_fulness_3minute_breathing));
+                    , "Kieran Fleck, Senior CBT Therapist"
+                    , R.raw.free_mind_fulness_3minute_breathing));
             briefExercisesList.add(new MeditationExercise("Breath, sound and body"
-                    , "Mindful Awareness Research Centre, UCLA", R.raw.free_mind_fulness_3minute_breathing));
+                    , "Mindful Awareness Research Centre, UCLA"
+                    , R.raw.free_mind_fulness_3minute_breathing));
             briefExercisesList.add(new MeditationExercise("Breath, sounds, body, thoughts, emotions"
-                    , "Mindful Awareness Research Centre, UCLA", R.raw.free_mind_fulness_3minute_breathing));
+                    , "Mindful Awareness Research Centre, UCLA"
+                    , R.raw.free_mind_fulness_3minute_breathing));
             briefExercisesList.add(new MeditationExercise("Ten minute wisdom meditation"
-                    , "UCSD Center for mindfulness", R.raw.free_mind_fulness_3minute_breathing));
+                    , "UCSD Center for mindfulness"
+                    , R.raw.free_mind_fulness_3minute_breathing));
             briefExercisesList.add(new MeditationExercise("Compassionate Breath"
-                    , "Vidyamala Burch, Breathworks", R.raw.free_mind_fulness_3minute_breathing));
+                    , "Vidyamala Burch, Breathworks"
+                    , R.raw.free_mind_fulness_3minute_breathing));
         } else
             briefExercisesList = null;
     }
