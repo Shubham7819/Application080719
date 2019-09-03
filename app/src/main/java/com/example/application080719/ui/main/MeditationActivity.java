@@ -42,11 +42,16 @@ public class MeditationActivity extends AppCompatActivity {
         audioResourceId = getIntent().getIntExtra(ExerciseListAdapter.EXERCISE_RESOURCE_ID, 0);
 
         AppCompatSeekBar seekBar = findViewById(R.id.media_seekbar);
+
         mMediaControlsImage = findViewById(R.id.media_control_iv);
         mMediaControlsImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mMediaBrowserHelper.getTransportControls().playFromMediaId(String.valueOf(audioResourceId), null);
+                if (mIsPlaying) {
+                    mMediaBrowserHelper.getTransportControls().pause();
+                } else {
+                    mMediaBrowserHelper.getTransportControls().playFromMediaId(String.valueOf(audioResourceId), null);
+                }
             }
         });
 
@@ -59,7 +64,6 @@ public class MeditationActivity extends AppCompatActivity {
         super.onStart();
         Log.v(TAG, "onStart called...");
         mMediaBrowserHelper.onStart();
-//        mMediaBrowserHelper.getTransportControls().prepareFromMediaId(String.valueOf(audioResourceId), null);
     }
 
     @Override
@@ -82,16 +86,11 @@ public class MeditationActivity extends AppCompatActivity {
 
         @Override
         protected void onConnected(@NonNull MediaControllerCompat mediaController) {
-            Log.d(TAG, " MediaBrowserConnection: onConnected called "
-                    + MainActivity.playerService);
+            Log.d(TAG, " MediaBrowserConnection: onConnected called ");
+            mMediaBrowserHelper.getTransportControls().prepareFromMediaId(
+                    String.valueOf(audioResourceId), null);
         }
 
-        @Override
-        protected void onServiceReceived(@NonNull PlayerService playerService) {
-            MainActivity.playerService = playerService;
-            Log.d(TAG, " MediaBrowserConnection: onServiceReceived called "
-                    + MainActivity.playerService);
-        }
     }
 
     private class MediaBrowserListener extends MediaControllerCompat.Callback {

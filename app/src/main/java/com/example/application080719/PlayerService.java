@@ -142,7 +142,14 @@ public class PlayerService extends MediaBrowserServiceCompat {
 
         @Override
         public void onPlayFromMediaId(String mediaId, Bundle extras) {
+            Log.d(LOG_TAG, "MediaSessionCallback: onPlayFromMediaId called");
+            mPlayback.playMeditationAudio();
+        }
 
+        @Override
+        public void onPrepareFromMediaId(String mediaId, Bundle extras) {
+            Log.d(LOG_TAG, "MediaSessionCallback: onPrepareFromMediaId called");
+            mPlayback.initializeMediaPlayer(PlayerService.this, Integer.valueOf(mediaId));
         }
 
         @Override

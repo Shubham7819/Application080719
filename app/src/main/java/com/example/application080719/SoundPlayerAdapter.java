@@ -76,9 +76,10 @@ public final class SoundPlayerAdapter extends PlayerAdapter {
         }
     }
 
-    private void initializeMediaPlayer() {
+    @Override
+    public void initializeMediaPlayer(Context context, int resId) {
         if (mMediaPlayer == null) {
-            mMediaPlayer = new MediaPlayer();
+            mMediaPlayer = MediaPlayer.create(context, resId);
             mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                 @Override
                 public void onCompletion(MediaPlayer mediaPlayer) {
@@ -88,6 +89,12 @@ public final class SoundPlayerAdapter extends PlayerAdapter {
                 }
             });
         }
+    }
+
+    @Override
+    public void playMeditationAudio() {
+        mMediaPlayer.start();
+        setNewState(PlaybackStateCompat.STATE_PLAYING);
     }
 
     // Implements PlaybackControl.
@@ -140,6 +147,9 @@ public final class SoundPlayerAdapter extends PlayerAdapter {
     @Override
     public boolean isPlaying() {
         Log.v(TAG, "isPlaying called");
+        if (mMediaPlayer != null) {
+            return mMediaPlayer.isPlaying();
+        }
         return mSoundPool != null;
     }
 
@@ -154,6 +164,9 @@ public final class SoundPlayerAdapter extends PlayerAdapter {
             }
         }
         Sounds.allPaused = true;
+        if (mMediaPlayer != null) {
+            mMediaPlayer.pause();
+        }
         setNewState(PlaybackStateCompat.STATE_PAUSED);
     }
 
@@ -169,6 +182,9 @@ public final class SoundPlayerAdapter extends PlayerAdapter {
             }
         }
         Sounds.allPaused = false;
+        if (mMediaPlayer != null) {
+            mMediaPlayer.start();
+        }
         setNewState(PlaybackStateCompat.STATE_PLAYING);
     }
 

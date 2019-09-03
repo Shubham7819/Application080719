@@ -65,6 +65,12 @@ public abstract class PlayerAdapter {
 
     public abstract boolean isPlaying();
 
+    public abstract void initializeMediaPlayer(Context context, int resId);
+
+    public abstract void playMeditationAudio();
+
+//    public abstract void seekMeditationAudioTo();
+
 //    public final void play() {
 //        if (mAudioFocusHelper.requestAudioFocus()) {
 //            registerAudioNoisyReceiver();

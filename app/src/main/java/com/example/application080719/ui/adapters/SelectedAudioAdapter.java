@@ -72,13 +72,13 @@ public class SelectedAudioAdapter extends ArrayAdapter<SoundItem> {
             public void onClick(View view) {
                 MainActivity.playerService.stopAudio(Sounds.streamIdList[id]);
                 if (currentSound.isItemPlaying())
-                PreferenceUtilities.decrementSoundsPlayingCount(context);
+                    PreferenceUtilities.decrementSoundsPlayingCount(context);
                 PreferenceUtilities.decrementSoundsSelectedCount(context);
                 currentSound.setItemPlaying(false);
                 currentSound.setItemSelected(false);
                 Sounds.selectedSoundsList.remove(currentSound);
                 if (PreferenceUtilities.getSoundsSelectedCount(context) > 0) {
-                    MainActivity.playerService.getPlayer().autoResume();
+//                    MainActivity.playerService.getPlayer().autoResume();
                 } else {
                     MainActivity.selectionBottomSheetDialog.dismiss();
                 }
