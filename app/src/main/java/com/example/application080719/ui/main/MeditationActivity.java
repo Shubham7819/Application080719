@@ -16,6 +16,7 @@ import androidx.appcompat.widget.AppCompatSeekBar;
 import com.example.application080719.MediaBrowserHelper;
 import com.example.application080719.PlayerService;
 import com.example.application080719.R;
+import com.example.application080719.ui.MediaSeekBar;
 import com.example.application080719.ui.adapters.ExerciseListAdapter;
 
 public class MeditationActivity extends AppCompatActivity {
@@ -23,6 +24,9 @@ public class MeditationActivity extends AppCompatActivity {
     private static final String TAG = MeditationActivity.class.getSimpleName();
     private boolean mIsPlaying;
     private ImageView mMediaControlsImage;
+    MediaSeekBar seekBar;
+    TextView timeCompleted;
+    TextView timeLeft;
     int soundId;
     int audioResourceId;
     private MediaBrowserHelper mMediaBrowserHelper;
@@ -39,9 +43,13 @@ public class MeditationActivity extends AppCompatActivity {
         TextView exerciseGuidesTV = findViewById(R.id.exercise_guides_tv);
         exerciseGuidesTV.setText(getIntent().getStringExtra(ExerciseListAdapter.EXERCISE_GUIDES));
 
-        audioResourceId = getIntent().getIntExtra(ExerciseListAdapter.EXERCISE_RESOURCE_ID, 0);
+        timeCompleted = findViewById(R.id.playing_time_completed_tv);
+        timeLeft = findViewById(R.id.playing_time_left_tv);
 
-        AppCompatSeekBar seekBar = findViewById(R.id.media_seekbar);
+        audioResourceId = getIntent().getIntExtra(
+                ExerciseListAdapter.EXERCISE_RESOURCE_ID, 0);
+
+        seekBar = findViewById(R.id.media_seekbar);
 
         mMediaControlsImage = findViewById(R.id.media_control_iv);
         mMediaControlsImage.setOnClickListener(new View.OnClickListener() {
@@ -50,7 +58,8 @@ public class MeditationActivity extends AppCompatActivity {
                 if (mIsPlaying) {
                     mMediaBrowserHelper.getTransportControls().pause();
                 } else {
-                    mMediaBrowserHelper.getTransportControls().playFromMediaId(String.valueOf(audioResourceId), null);
+                    mMediaBrowserHelper.getTransportControls().playFromMediaId(
+                            String.valueOf(audioResourceId), null);
                 }
             }
         });
@@ -70,6 +79,7 @@ public class MeditationActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         Log.v(TAG, "onStop called...");
+        seekBar.disconnectController();
         mMediaBrowserHelper.onStop();
     }
 
@@ -87,8 +97,9 @@ public class MeditationActivity extends AppCompatActivity {
         @Override
         protected void onConnected(@NonNull MediaControllerCompat mediaController) {
             Log.d(TAG, " MediaBrowserConnection: onConnected called ");
-            mMediaBrowserHelper.getTransportControls().prepareFromMediaId(
+            mediaController.getTransportControls().prepareFromMediaId(
                     String.valueOf(audioResourceId), null);
+            seekBar.setMediaController(mediaController);
         }
 
     }
@@ -99,7 +110,6 @@ public class MeditationActivity extends AppCompatActivity {
             mIsPlaying = playbackState != null &&
                     playbackState.getState() == PlaybackStateCompat.STATE_PLAYING;
             mMediaControlsImage.setPressed(mIsPlaying);
-            CommonFragment.soundListAdapter.notifyDataSetChanged();
         }
     }
 

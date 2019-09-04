@@ -8,7 +8,6 @@ import android.os.Handler;
 import android.os.RemoteException;
 import android.os.ResultReceiver;
 import android.support.v4.media.MediaBrowserCompat;
-import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
@@ -32,7 +31,6 @@ public class MediaBrowserHelper {
 
     private final MediaBrowserConnectionCallback mMediaBrowserConnectionCallback;
     private final MediaControllerCallback mMediaControllerCallback;
-//    private final MediaBrowserSubscriptionCallback mMediaBrowserSubscriptionCallback;
 
     private MediaBrowserCompat mMediaBrowser;
 
@@ -47,7 +45,6 @@ public class MediaBrowserHelper {
 
         mMediaBrowserConnectionCallback = new MediaBrowserConnectionCallback();
         mMediaControllerCallback = new MediaControllerCallback();
-//        mMediaBrowserSubscriptionCallback = new MediaBrowserSubscriptionCallback();
     }
 
     public void onStart() {
@@ -89,16 +86,6 @@ public class MediaBrowserHelper {
      */
     protected void onConnected(@NonNull MediaControllerCompat mediaController) {
     }
-
-//    /**
-//     * Called after loading a browsable {@link MediaBrowserCompat.MediaItem}
-//     *
-//     * @param parentId The media ID of the parent item.
-//     * @param children List (possibly empty) of child items.
-//     */
-//    protected void onChildrenLoaded(@NonNull String parentId,
-//                                    @NonNull List<MediaBrowserCompat.MediaItem> children) {
-//    }
 
     protected void onServiceReceived(@NonNull PlayerService playerService) {
     }
@@ -218,30 +205,9 @@ public class MediaBrowserHelper {
 
     }
 
-    // Receives callbacks from the MediaBrowser when the MediaBrowserService has loaded new media
-    // that is ready for playback.
-//    public class MediaBrowserSubscriptionCallback extends MediaBrowserCompat.SubscriptionCallback {
-//
-//        @Override
-//        public void onChildrenLoaded(@NonNull String parentId,
-//                                     @NonNull List<MediaBrowserCompat.MediaItem> children) {
-//            MediaBrowserHelper.this.onChildrenLoaded(parentId, children);
-//        }
-//    }
-
     // Receives callbacks from the MediaController and updates the UI state,
     // i.e.: Which is the current item, whether it's playing or paused, etc.
     private class MediaControllerCallback extends MediaControllerCompat.Callback {
-
-        @Override
-        public void onMetadataChanged(final MediaMetadataCompat metadata) {
-            performOnAllCallbacks(new CallbackCommand() {
-                @Override
-                public void perform(@NonNull MediaControllerCompat.Callback callback) {
-                    callback.onMetadataChanged(metadata);
-                }
-            });
-        }
 
         @Override
         public void onPlaybackStateChanged(@Nullable final PlaybackStateCompat state) {

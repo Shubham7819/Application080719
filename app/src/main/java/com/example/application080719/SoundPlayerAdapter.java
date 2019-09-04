@@ -84,8 +84,7 @@ public final class SoundPlayerAdapter extends PlayerAdapter {
                 @Override
                 public void onCompletion(MediaPlayer mediaPlayer) {
                     mPlaybackInfoListener.onPlaybackCompleted();
-
-//                    setNewState(PlaybackStateCompat.STATE_PAUSED);
+                    setNewState(PlaybackStateCompat.STATE_PAUSED);
                 }
             });
         }
@@ -141,6 +140,10 @@ public final class SoundPlayerAdapter extends PlayerAdapter {
         if (mSoundPool != null) {
             mSoundPool.release();
             mSoundPool = null;
+        }
+        if (mMediaPlayer != null) {
+            mMediaPlayer.release();
+            mMediaPlayer = null;
         }
     }
 
@@ -202,6 +205,9 @@ public final class SoundPlayerAdapter extends PlayerAdapter {
                 CommonFragment.soundItemsList.get(i).setItemLoaded(false);
                 Sounds.selectedSoundsList.remove(CommonFragment.soundItemsList.get(i));
             }
+        }
+        if (mMediaPlayer != null) {
+            mMediaPlayer.stop();
         }
         setNewState(PlaybackStateCompat.STATE_STOPPED);
         release();
