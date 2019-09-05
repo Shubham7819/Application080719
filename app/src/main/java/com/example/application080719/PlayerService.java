@@ -59,6 +59,7 @@ public class PlayerService extends MediaBrowserServiceCompat {
         mNotificationUtils = new NotificationUtils(this);
 
         mPlayback = new SoundPlayerAdapter(this, new MediaPlayerListener());
+        mPlayback.setOnMediaPreparedListener(new MediaPreparedListener());
     }
 
     @Nullable
@@ -169,6 +170,19 @@ public class PlayerService extends MediaBrowserServiceCompat {
             Log.d(LOG_TAG, "MediaSessionCallback: onStop called");
             mPlayback.stop();
             mediaSession.setActive(false);
+        }
+
+        @Override
+        public void onSeekTo(long pos) {
+            mPlayback.seekTo(pos);
+        }
+    }
+
+    public class MediaPreparedListener implements SoundPlayerAdapter.OnMediaPreparedListener{
+        @Override
+        public void onMediaPrepared() {
+            Log.v(LOG_TAG, "MediaPreparedListener: onMediaPrepared called");
+            mediaSession.setMetadata(mPlayback.getMetadata());
         }
     }
 

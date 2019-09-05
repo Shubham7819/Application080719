@@ -300,7 +300,6 @@ public class MainActivity extends AppCompatActivity
     protected void onStop() {
         super.onStop();
         Log.v(TAG, "onStop called...");
-        mMediaBrowserHelper.onStop();
     }
 
     @Override
@@ -308,6 +307,7 @@ public class MainActivity extends AppCompatActivity
         Log.v(TAG, "onDestroy called...");
 
         super.onDestroy();
+        mMediaBrowserHelper.onStop();
 
         /** Cleanup the shared preference listener **/
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);

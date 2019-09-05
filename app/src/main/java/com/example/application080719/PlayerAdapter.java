@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.media.AudioManager;
 import android.media.SoundPool;
+import android.support.v4.media.MediaMetadataCompat;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -69,6 +70,10 @@ public abstract class PlayerAdapter {
 
     public abstract void playMeditationAudio();
 
+    public abstract MediaMetadataCompat getMetadata();
+
+    public abstract void setOnMediaPreparedListener(SoundPlayerAdapter.OnMediaPreparedListener listener);
+
 //    public abstract void seekMeditationAudioTo();
 
 //    public final void play() {
@@ -119,6 +124,8 @@ public abstract class PlayerAdapter {
      * point.
      */
     protected abstract void onStop();
+
+    public abstract void seekTo(long position);
 
     public abstract void setVolume(float volume);
 

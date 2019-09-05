@@ -8,6 +8,7 @@ import android.os.Handler;
 import android.os.RemoteException;
 import android.os.ResultReceiver;
 import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
@@ -132,6 +133,11 @@ public class MediaBrowserHelper {
 
             // Update with the latest metadata/playback state.
             if (mMediaController != null) {
+                final MediaMetadataCompat metadata = mMediaController.getMetadata();
+                if (metadata != null) {
+                    callback.onMetadataChanged(metadata);
+                }
+
                 final PlaybackStateCompat playbackState = mMediaController.getPlaybackState();
                 if (playbackState != null) {
                     callback.onPlaybackStateChanged(playbackState);
@@ -208,6 +214,16 @@ public class MediaBrowserHelper {
     // Receives callbacks from the MediaController and updates the UI state,
     // i.e.: Which is the current item, whether it's playing or paused, etc.
     private class MediaControllerCallback extends MediaControllerCompat.Callback {
+
+        @Override
+        public void onMetadataChanged(final MediaMetadataCompat metadata) {
+            performOnAllCallbacks(new CallbackCommand() {
+                @Override
+                public void perform(@NonNull MediaControllerCompat.Callback callback) {
+                    callback.onMetadataChanged(metadata);
+                }
+            });
+        }
 
         @Override
         public void onPlaybackStateChanged(@Nullable final PlaybackStateCompat state) {
