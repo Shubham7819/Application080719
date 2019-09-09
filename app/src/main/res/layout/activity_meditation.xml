@@ -9,24 +9,58 @@
     android:padding="8dp"
     tools:context=".ui.main.MeditationActivity">
 
-    <ImageView
-        android:id="@+id/media_control_iv"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:layout_centerInParent="true"
-        android:src="@drawable/ic_play_pause_toggle"
-        android:tint="@color/colorTitle" />
-
-    <TextView
-        android:id="@+id/exercise_guides_tv"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/exercise_title_tv"
-        android:layout_centerInParent="true"
+        android:layout_below="@id/seekbar_layout"
+        android:layout_margin="16dp"
         android:gravity="center"
-        android:textColor="@color/colorSubTitle"
-        android:textSize="18sp"
-        tools:text="peter" />
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/playing_time_completed_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/colorTitle"
+            android:padding="8dp"
+            tools:text="01:34" />
+
+        <View
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="@color/colorSubTitle"/>
+
+        <TextView
+            android:id="@+id/playing_time_left_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/colorTitle"
+            android:padding="8dp"
+            tools:text="12:34" />
+
+    </LinearLayout>
+
+    <RelativeLayout
+        android:id="@+id/seekbar_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="42dp"
+        android:layout_centerInParent="true">
+
+        <com.example.application080719.ui.MediaSeekBar
+            android:id="@+id/media_seekbar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <ImageView
+            android:id="@+id/media_control_iv"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_centerInParent="true"
+            android:src="@drawable/ic_play_pause_toggle"
+            android:tint="@color/colorTitle" />
+
+    </RelativeLayout>
 
     <TextView
         android:id="@+id/exercise_title_tv"
@@ -38,32 +72,15 @@
         android:textSize="24sp"
         tools:text="5 Min yo" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
+    <TextView
+        android:id="@+id/exercise_guides_tv"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:layout_alignParentBottom="true"
-        android:layout_margin="16dp"
-        android:orientation="horizontal">
-
-        <TextView
-            android:id="@+id/playing_time_completed_tv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            tools:text="1:34" />
-
-        <com.example.application080719.ui.MediaSeekBar
-            android:id="@+id/media_seekbar"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1" />
-
-        <TextView
-            android:id="@+id/playing_time_left_tv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            tools:text="12:34" />
-
-    </LinearLayout>
+        android:layout_below="@id/exercise_title_tv"
+        android:layout_centerInParent="true"
+        android:gravity="center"
+        android:textColor="@color/colorSubTitle"
+        android:textSize="18sp"
+        tools:text="peter" />
 
 </RelativeLayout>

@@ -11,23 +11,25 @@ import android.widget.SeekBar;
 
 import androidx.appcompat.widget.AppCompatSeekBar;
 
-public class MediaSeekBar extends AppCompatSeekBar {
+import com.example.application080719.CircularSeekBar;
+
+public class MediaSeekBar extends CircularSeekBar {
     private MediaControllerCompat mMediaController;
     private ControllerCallback mControllerCallback;
 
     private boolean mIsTracking = false;
-    private OnSeekBarChangeListener mOnSeekBarChangeListener = new OnSeekBarChangeListener() {
+    private OnCircularSeekBarChangeListener mOnSeekBarChangeListener = new OnCircularSeekBarChangeListener() {
         @Override
-        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+        public void onProgressChanged(CircularSeekBar seekBar, int progress, boolean fromUser) {
         }
 
         @Override
-        public void onStartTrackingTouch(SeekBar seekBar) {
+        public void onStartTrackingTouch(CircularSeekBar seekBar) {
             mIsTracking = true;
         }
 
         @Override
-        public void onStopTrackingTouch(SeekBar seekBar) {
+        public void onStopTrackingTouch(CircularSeekBar seekBar) {
             mMediaController.getTransportControls().seekTo(getProgress());
             mIsTracking = false;
         }
@@ -50,7 +52,7 @@ public class MediaSeekBar extends AppCompatSeekBar {
     }
 
     @Override
-    public final void setOnSeekBarChangeListener(OnSeekBarChangeListener l) {
+    public final void setOnSeekBarChangeListener(OnCircularSeekBarChangeListener l) {
         // Prohibit adding seek listeners to this subclass.
         throw new UnsupportedOperationException("Cannot add listeners to a MediaSeekBar");
     }
