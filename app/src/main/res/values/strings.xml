@@ -2,7 +2,9 @@
     <string name="app_name">Application080719</string>
 
     <string name="play">Play</string>
+    <string name="pause">Pause</string>
     <string name="clear">Clear</string>
+
     <string name="timer">Timer</string>
     <string name="selection">Selection</string>
 
@@ -11,7 +13,7 @@
     <string name="brief_practices">Brief Practices</string>
     <string name="body_scan">Body Scan</string>
     <string name="sounds">Sounds</string>
-    <string name="pause">Pause</string>
+
     <string name="pm">PM</string>
     <string name="am">AM</string>
 
@@ -24,4 +26,6 @@
         <item>1.5 Hour</item>
         <item>2 Hour</item>
     </string-array>
+
+    <string name="no_internet">Internet Not Available</string>
 </resources>

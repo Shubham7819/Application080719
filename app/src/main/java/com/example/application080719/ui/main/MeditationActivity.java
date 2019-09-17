@@ -14,15 +14,26 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.AppCompatSeekBar;
 
+import com.example.application080719.GetDataService;
 import com.example.application080719.MediaBrowserHelper;
 import com.example.application080719.PlayerService;
 import com.example.application080719.R;
+import com.example.application080719.RetrofitClientInstance;
 import com.example.application080719.ui.MediaSeekBar;
 import com.example.application080719.ui.adapters.ExerciseListAdapter;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Locale;
+
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MeditationActivity extends AppCompatActivity {
 
@@ -31,9 +42,12 @@ public class MeditationActivity extends AppCompatActivity {
     private ImageView mMediaControlsImage;
     MediaSeekBar seekBar;
     TextView timeCompleted, timeLeft;
-    int soundId, audioResourceId, max;
+    int audioResourceId, max;
     private MediaBrowserHelper mMediaBrowserHelper;
+    String exerciseName, exerciseGuides;
 
+    // TODO: use secondary indicator of SeekBar for download progress
+    // TODO: add logic to check already downloaded file
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,10 +55,12 @@ public class MeditationActivity extends AppCompatActivity {
         Log.v(TAG, "onCreate called...");
 
         TextView exerciseNameTV = findViewById(R.id.exercise_title_tv);
-        exerciseNameTV.setText(getIntent().getStringExtra(ExerciseListAdapter.EXERCISE_NAME));
+        exerciseName = getIntent().getStringExtra(ExerciseListAdapter.EXERCISE_NAME);
+        exerciseNameTV.setText(exerciseName);
 
         TextView exerciseGuidesTV = findViewById(R.id.exercise_guides_tv);
-        exerciseGuidesTV.setText(getIntent().getStringExtra(ExerciseListAdapter.EXERCISE_GUIDES));
+        exerciseGuides = getIntent().getStringExtra(ExerciseListAdapter.EXERCISE_GUIDES);
+        exerciseGuidesTV.setText(exerciseGuides);
 
         timeCompleted = findViewById(R.id.playing_time_completed_tv);
         timeLeft = findViewById(R.id.playing_time_left_tv);
@@ -64,6 +80,29 @@ public class MeditationActivity extends AppCompatActivity {
                     mMediaBrowserHelper.getTransportControls().playFromMediaId(
                             String.valueOf(audioResourceId), null);
                 }
+            }
+        });
+
+        GetDataService mService = RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class);
+        Call<ResponseBody> call = mService.getAudioById("download", "1DLEC3blXfd3HKxuLtjmWgWJAfkrdah7X");
+
+        call.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                if (response.isSuccessful()) {
+                    Log.d(TAG, "server contacted and has file");
+
+                    boolean writtenToDisk = writeResponseBodyToDisk(response.body());
+
+                    Log.d(TAG, "file download was a success? " + writtenToDisk);
+                } else {
+                    Log.d(TAG, "server contact failed");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                Log.e(TAG, "error");
             }
         });
 
@@ -107,10 +146,11 @@ public class MeditationActivity extends AppCompatActivity {
         }
 
     }
+
     private ValueAnimator mProgressAnimator;
 
     private class MediaBrowserListener extends MediaControllerCompat.Callback
-            implements ValueAnimator.AnimatorUpdateListener{
+            implements ValueAnimator.AnimatorUpdateListener {
         @Override
         public void onPlaybackStateChanged(PlaybackStateCompat playbackState) {
             mIsPlaying = playbackState != null &&
@@ -162,11 +202,61 @@ public class MeditationActivity extends AppCompatActivity {
     }
 
     private String formatTime(int timeInMS) {
-        int minutes = (int) (timeInMS / 1000) / 60;
-        int seconds = (int) (timeInMS / 1000) % 60;
+        int minutes = (timeInMS / 1000) / 60;
+        int seconds = (timeInMS / 1000) % 60;
 
         return String.format(Locale.getDefault(), "%02d:%02d"
                 , minutes, seconds);
+    }
+
+    private boolean writeResponseBodyToDisk(ResponseBody body) {
+        try {
+            File futureStudioIconFile = new File(getExternalFilesDir(null)
+                    + File.separator + exerciseName + " - " + exerciseGuides + ".png");
+
+            InputStream inputStream = null;
+            OutputStream outputStream = null;
+
+            try {
+                byte[] fileReader = new byte[4096];
+
+                long fileSize = body.contentLength();
+                long fileSizeDownloaded = 0;
+
+                inputStream = body.byteStream();
+                outputStream = new FileOutputStream(futureStudioIconFile);
+
+                while (true) {
+                    int read = inputStream.read(fileReader);
+
+                    if (read == -1) {
+                        break;
+                    }
+
+                    outputStream.write(fileReader, 0, read);
+
+                    fileSizeDownloaded += read;
+
+                    Log.d(TAG, "file download: " + fileSizeDownloaded + " of " + fileSize);
+                }
+
+                outputStream.flush();
+
+                return true;
+            } catch (IOException e) {
+                return false;
+            } finally {
+                if (inputStream != null) {
+                    inputStream.close();
+                }
+
+                if (outputStream != null) {
+                    outputStream.close();
+                }
+            }
+        } catch (IOException e) {
+            return false;
+        }
     }
 
 }
